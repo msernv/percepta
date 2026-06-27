@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Percepta — Аналитика роста</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        body { background: #f4f6f9; font-family: 'Segoe UI', sans-serif; }
+        .navbar-custom { background: linear-gradient(135deg, #1a1a2e, #16213e); padding: 15px 0; }
+        .navbar-custom .navbar-brand { color: #fff !important; font-weight: 700; }
+        .navbar-custom .nav-link { color: rgba(255,255,255,0.7) !important; }
+        .card { border-radius: 16px; border: none; box-shadow: 0 6px 20px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .stat-card { background: white; padding: 20px; }
+        .stat-card .number { font-size: 2.2rem; font-weight: 700; color: #1a1a2e; }
+        .stat-card .label { font-size: 0.9rem; color: #6c757d; text-transform: uppercase; }
+        .btn-primary-custom { background: #6f42c1; border: none; }
+        .btn-primary-custom:hover { background: #5a32a3; }
+        .footer { margin-top: 50px; padding: 20px 0; color: #6c757d; border-top: 1px solid #e9ecef; text-align: center; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container">
+            <a class="navbar-brand" href="#"><i class="bi bi-graph-up-arrow"></i> Percepta</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#">Дашборд</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Демо-версия</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Заголовок -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h4><i class="bi bi-speedometer2 text-primary"></i> Дашборд Percepta (Демо)</h4>
+                <p class="text-muted">Интерактивная демонстрация возможностей платформы. Данные — примерные.</p>
+            </div>
+        </div>
+
+        <!-- Карточки метрик -->
+        <div class="row" id="metricsRow">
+            <!-- Заполнится через JavaScript -->
+        </div>
+
+        <!-- График MRR -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">📈 Динамика MRR</h5>
+                        <div id="mrrChart" style="height: 300px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Таблица когорт -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">🔥 Когортное удержание</h5>
+                        <div id="cohortTable"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Клиенты в риске -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">⚠️ Клиенты в зоне риска</h5>
+                        <div id="riskyClients"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="container">
+            <p>© 2025 Percepta — Демо-версия. Сделано с ❤️</p>
+        </div>
+    </div>
+
+    <script>
+        // Демо-данные
+        const data = {
+            metrics: {
+                revenue: 2185.0,
+                mrr: 420.0,
+                nrr: 112.5,
+                churn: 3.2,
+                arpu: 230.6,
+                active_users: 8,
+                churned_users: 2
+            },
+            mrrHistory: {
+                months: ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн'],
+                values: [350, 380, 395, 405, 415, 420]
+            },
+            cohort: {
+                months: ['Янв', 'Фев', 'Мар'],
+                data: [
+                    [100, 85, 70],
+                    [100, 80, 65],
+                    [100, 75, 60]
+                ]
+            },
+            riskyClients: [
+                { id: 3, revenue: 150, last_activity: '2024-01-28', risk: 85, reasons: ['Не заходил 14 дней', 'Написал "Дорого"'] },
+                { id: 6, revenue: 180, last_activity: '2024-02-01', risk: 70, reasons: ['Нет платежа в текущем месяце'] }
+            ]
+        };
+
+        // 1. Метрики
+        const metricsMap = {
+            revenue: { icon: 'bi-cash', name: 'Выручка', unit: '$' },
+            mrr: { icon: 'bi-graph-up', name: 'MRR', unit: '$' },
+            nrr: { icon: 'bi-arrow-repeat', name: 'NRR', unit: '%' },
+            churn: { icon: 'bi-exclamation-triangle', name: 'Churn', unit: '%' },
+            arpu: { icon: 'bi-person-badge', name: 'ARPU', unit: '$' },
+            active_users: { icon: 'bi-people', name: 'Активные', unit: '' },
+            churned_users: { icon: 'bi-person-x', name: 'Ушедшие', unit: '' }
+        };
+
+        const row = document.getElementById('metricsRow');
+        for (const [key, val] of Object.entries(data.metrics)) {
+            const meta = metricsMap[key];
+            if (!meta) continue;
+            const col = document.createElement('div');
+            col.className = 'col-md-3 col-sm-6 mb-3';
+            col.innerHTML = `
+                <div class="card stat-card h-100">
+                    <div class="card-body">
+                        <div class="metric-label"><i class="${meta.icon}"></i> ${meta.name}</div>
+                        <div class="number">${meta.unit === '$' ? '$' : ''}${val.toFixed(1)}${meta.unit === '%' ? '%' : ''}</div>
+                    </div>
+                </div>
+            `;
+            row.appendChild(col);
+        }
+
+        // 2. График MRR
+        const trace = {
+            x: data.mrrHistory.months,
+            y: data.mrrHistory.values,
+            type: 'scatter',
+            mode: 'lines+markers',
+            line: { color: '#6f42c1', width: 3 },
+            marker: { color: '#6f42c1', size: 8 }
+        };
+        Plotly.newPlot('mrrChart', [trace], {
+            margin: { t: 20, r: 20, l: 50, b: 40 },
+            yaxis: { title: 'MRR, $' },
+            font: { family: 'Segoe UI, sans-serif' }
+        });
+
+        // 3. Когортная таблица
+        let cohortHtml = `
+            <table class="table table-bordered table-sm text-center" style="min-width: 300px;">
+                <thead><tr><th>Месяц</th><th>1 мес</th><th>2 мес</th><th>3 мес</th></tr></thead>
+                <tbody>
+        `;
+        for (let i = 0; i < data.cohort.months.length; i++) {
+            cohortHtml += `<tr><td><strong>${data.cohort.months[i]}</strong></td>`;
+            for (let j = 0; j < 3; j++) {
+                const val = data.cohort.data[i][j] || 0;
+                const color = val >= 80 ? '#27ae60' : val >= 50 ? '#f1c40f' : '#ecf0f1';
+                const textColor = val >= 50 ? 'white' : 'black';
+                cohortHtml += `<td style="background:${color};color:${textColor};">${val}%</td>`;
+            }
+            cohortHtml += `</tr>`;
+        }
+        cohortHtml += '</tbody></table>';
+        document.getElementById('cohortTable').innerHTML = cohortHtml;
+
+        // 4. Рискованные клиенты
+        if (data.riskyClients.length > 0) {
+            let riskHtml = `
+                <table class="table table-hover">
+                    <thead><tr><th>ID</th><th>Выручка</th><th>Активность</th><th>Риск</th><th>Причины</th></tr></thead>
+                    <tbody>
+            `;
+            for (const client of data.riskyClients) {
+                const color = client.risk >= 70 ? 'text-danger' : 'text-warning';
+                riskHtml += `
+                    <tr>
+                        <td>#${client.id}</td>
+                        <td>$${client.revenue.toFixed(2)}</td>
+                        <td>${client.last_activity}</td>
+                        <td><span class="${color}">${client.risk}%</span></td>
+                        <td>${client.reasons.map(r => `<span class="badge bg-danger">${r}</span>`).join(' ')}</td>
+                    </tr>
+                `;
+            }
+            riskHtml += '</tbody></table>';
+            document.getElementById('riskyClients').innerHTML = riskHtml;
+        } else {
+            document.getElementById('riskyClients').innerHTML = '<div class="alert alert-success">Отлично! Клиенты в зоне риска не найдены.</div>';
+        }
+    </script>
+</body>
+</html>
