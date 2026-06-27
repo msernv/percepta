@@ -10,75 +10,190 @@
     <style>
         body { background: #f4f6f9; font-family: 'Segoe UI', sans-serif; }
         .navbar-custom { background: linear-gradient(135deg, #1a1a2e, #16213e); padding: 15px 0; }
-        .navbar-custom .navbar-brand { color: #fff !important; font-weight: 700; }
-        .navbar-custom .nav-link { color: rgba(255,255,255,0.7) !important; }
+        .navbar-custom .navbar-brand { color: #fff !important; font-weight: 700; font-size: 1.5rem; }
+        .navbar-custom .navbar-brand i { color: #6f42c1; }
+        .navbar-custom .nav-link { color: rgba(255,255,255,0.7) !important; cursor: pointer; }
+        .navbar-custom .nav-link:hover { color: #fff !important; }
         .card { border-radius: 16px; border: none; box-shadow: 0 6px 20px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .stat-card { background: white; padding: 20px; }
+        .stat-card { background: white; padding: 20px; transition: 0.2s; }
+        .stat-card:hover { box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
         .stat-card .number { font-size: 2.2rem; font-weight: 700; color: #1a1a2e; }
-        .stat-card .label { font-size: 0.9rem; color: #6c757d; text-transform: uppercase; }
+        .stat-card .label { font-size: 0.9rem; color: #6c757d; text-transform: uppercase; letter-spacing: 0.5px; }
         .btn-primary-custom { background: #6f42c1; border: none; }
         .btn-primary-custom:hover { background: #5a32a3; }
+        .upload-zone { border: 2px dashed #6f42c1; border-radius: 20px; padding: 40px; text-align: center; background: #fafafa; cursor: pointer; transition: 0.3s; }
+        .upload-zone:hover { background: #f0ebff; border-color: #4a2a8a; }
         .footer { margin-top: 50px; padding: 20px 0; color: #6c757d; border-top: 1px solid #e9ecef; text-align: center; }
+        .hidden { display: none !important; }
+        .risk-high { color: #dc3545; font-weight: bold; }
+        .risk-medium { color: #fd7e14; font-weight: bold; }
+        .risk-low { color: #28a745; font-weight: bold; }
+        .metric-value { font-size: 1.8rem; font-weight: 700; }
+        .badge-ai { background: #6f42c1; color: white; font-size: 0.7rem; }
+        .pre-scrollable { max-height: 300px; overflow-y: auto; }
     </style>
 </head>
 <body>
+
+    <!-- ====== NAVBAR ====== -->
     <nav class="navbar navbar-expand-lg navbar-custom">
         <div class="container">
             <a class="navbar-brand" href="#"><i class="bi bi-graph-up-arrow"></i> Percepta</a>
             <div class="collapse navbar-collapse">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="#">Дашборд</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">Демо-версия</a></li>
+                    <li class="nav-item"><a class="nav-link" id="navDashboard" onclick="showSection('dashboard')"><i class="bi bi-speedometer2"></i> Дашборд</a></li>
+                    <li class="nav-item"><a class="nav-link" id="navUpload" onclick="showSection('upload')"><i class="bi bi-cloud-upload"></i> Загрузить</a></li>
+                    <li class="nav-item"><a class="nav-link" id="navSettings" onclick="showSection('settings')"><i class="bi bi-sliders2"></i> Настройки</a></li>
+                    <li class="nav-item"><a class="nav-link" id="navLogin" onclick="showLogin()"><i class="bi bi-box-arrow-in-right"></i> Войти</a></li>
+                    <li class="nav-item hidden" id="navLogoutLi"><a class="nav-link" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Выйти</a></li>
                 </ul>
             </div>
         </div>
     </nav>
 
     <div class="container mt-4">
-        <!-- Заголовок -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <h4><i class="bi bi-speedometer2 text-primary"></i> Дашборд Percepta (Демо)</h4>
-                <p class="text-muted">Интерактивная демонстрация возможностей платформы. Данные — примерные.</p>
-            </div>
-        </div>
+        <!-- ====== СООБЩЕНИЯ ====== -->
+        <div id="messages"></div>
 
-        <!-- Карточки метрик -->
-        <div class="row" id="metricsRow">
-            <!-- Заполнится через JavaScript -->
-        </div>
-
-        <!-- График MRR -->
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">📈 Динамика MRR</h5>
-                        <div id="mrrChart" style="height: 300px;"></div>
+        <!-- ====== СТРАНИЦА ВХОДА ====== -->
+        <div id="loginSection" class="row justify-content-center mt-5">
+            <div class="col-md-5">
+                <div class="card shadow-lg p-4">
+                    <h3 class="text-center mb-4"><i class="bi bi-box-arrow-in-right"></i> Вход в Percepta</h3>
+                    <form id="loginForm">
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" id="loginEmail" class="form-control" placeholder="example@company.com" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Пароль</label>
+                            <input type="password" id="loginPassword" class="form-control" placeholder="Пароль" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary-custom w-100">Войти</button>
+                    </form>
+                    <div class="text-center mt-3">
+                        <small>Нет аккаунта? <a href="#" onclick="showRegister()">Зарегистрируйтесь</a></small>
+                    </div>
+                    <div class="text-center mt-2">
+                        <small class="text-muted">Тестовый пользователь: test@percepta.com / password123</small>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Таблица когорт -->
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">🔥 Когортное удержание</h5>
-                        <div id="cohortTable"></div>
+        <!-- ====== СТРАНИЦА РЕГИСТРАЦИИ ====== -->
+        <div id="registerSection" class="row justify-content-center mt-5 hidden">
+            <div class="col-md-5">
+                <div class="card shadow-lg p-4">
+                    <h3 class="text-center mb-4"><i class="bi bi-person-plus"></i> Регистрация</h3>
+                    <form id="registerForm">
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" id="regEmail" class="form-control" placeholder="example@company.com" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Название компании</label>
+                            <input type="text" id="regCompany" class="form-control" placeholder="ООО Моя Компания">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Тип бизнеса</label>
+                            <select id="regVertical" class="form-select">
+                                <option value="saas">SaaS / Подписки</option>
+                                <option value="ecommerce">E-commerce</option>
+                                <option value="fintech">FinTech</option>
+                                <option value="subscription">Подписки (общие)</option>
+                                <option value="retail">Ритейл / Офлайн</option>
+                                <option value="custom">Прочее (Custom)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Пароль</label>
+                            <input type="password" id="regPassword" class="form-control" placeholder="Минимум 4 символа" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary-custom w-100">Зарегистрироваться</button>
+                    </form>
+                    <div class="text-center mt-3">
+                        <small>Уже есть аккаунт? <a href="#" onclick="showLogin()">Войти</a></small>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Клиенты в риске -->
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">⚠️ Клиенты в зоне риска</h5>
-                        <div id="riskyClients"></div>
+        <!-- ====== ДАШБОРД ====== -->
+        <div id="dashboardSection" class="hidden">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h4><i class="bi bi-speedometer2 text-primary"></i> Дашборд Percepta</h4>
+                    <p class="text-muted" id="lastUpdated">Данные не загружены. Загрузите CSV-файл.</p>
+                </div>
+            </div>
+            <div class="row" id="metricsRow"></div>
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5>📈 Динамика MRR</h5>
+                            <div id="mrrChart" style="height:300px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5>🔥 Когортное удержание</h5>
+                            <div id="cohortTable"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5>⚠️ Клиенты в зоне риска</h5>
+                            <div id="riskyClients"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ====== ЗАГРУЗКА ====== -->
+        <div id="uploadSection" class="hidden">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="card p-4">
+                        <h4><i class="bi bi-cloud-upload text-primary"></i> Загрузка данных</h4>
+                        <p class="text-muted">Загрузите CSV или Excel файл с данными о клиентах. <br> <strong>Требуемые колонки:</strong> user_id, date, revenue, status, last_activity_date, support_ticket_text</p>
+                        <hr>
+                        <div class="upload-zone" id="dropZone">
+                            <i class="bi bi-file-earmark-spreadsheet" style="font-size:3rem;color:#6f42c1;"></i>
+                            <p class="mt-3"><strong>Перетащите файл сюда</strong> или кликните для выбора</p>
+                            <p class="text-muted small">.csv, .xlsx, .xls</p>
+                            <input type="file" id="fileInput" style="display:none;" accept=".csv,.xlsx,.xls">
+                        </div>
+                        <button class="btn btn-primary-custom mt-3" onclick="uploadFile()"><i class="bi bi-cloud-upload"></i> Загрузить и обработать</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ====== НАСТРОЙКИ ====== -->
+        <div id="settingsSection" class="hidden">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4><i class="bi bi-sliders2 text-primary"></i> Конструктор дашборда</h4>
+                            <p class="text-muted">Выберите метрики для отображения на дашборде.</p>
+                            <hr>
+                            <form id="settingsForm">
+                                <div id="settingsMetrics" class="row"></div>
+                                <button type="submit" class="btn btn-primary-custom"><i class="bi bi-save"></i> Сохранить настройки</button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -87,126 +202,623 @@
 
     <div class="footer">
         <div class="container">
-            <p>© 2025 Percepta — Демо-версия. Сделано с ❤️</p>
+            <p>© 2025 Percepta — AI-аналитика для вашего бизнеса. <span class="text-muted">Все данные хранятся локально в вашем браузере.</span></p>
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js">
+    </script>
+
     <script>
-        // Демо-данные
-        const data = {
-            metrics: {
-                revenue: 2185.0,
-                mrr: 420.0,
-                nrr: 112.5,
-                churn: 3.2,
-                arpu: 230.6,
-                active_users: 8,
-                churned_users: 2
-            },
-            mrrHistory: {
-                months: ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн'],
-                values: [350, 380, 395, 405, 415, 420]
-            },
-            cohort: {
-                months: ['Янв', 'Фев', 'Мар'],
-                data: [
-                    [100, 85, 70],
-                    [100, 80, 65],
-                    [100, 75, 60]
-                ]
-            },
-            riskyClients: [
-                { id: 3, revenue: 150, last_activity: '2024-01-28', risk: 85, reasons: ['Не заходил 14 дней', 'Написал "Дорого"'] },
-                { id: 6, revenue: 180, last_activity: '2024-02-01', risk: 70, reasons: ['Нет платежа в текущем месяце'] }
-            ]
+        // ============================================================
+        // 1. КОНФИГУРАЦИЯ ВСЕХ МЕТРИК
+        // ============================================================
+        const METRICS_REGISTRY = {
+            'revenue': { name: 'Общая выручка', description: 'Суммарная выручка за период', category: 'Финансы',
+                icon: 'bi-cash', unit: '$' },
+            'mrr': { name: 'MRR', description: 'Ежемесячная регулярная выручка', category: 'Финансы', icon: 'bi-graph-up',
+                unit: '$' },
+            'arr': { name: 'ARR', description: 'Годовая регулярная выручка', category: 'Финансы', icon: 'bi-calendar3',
+                unit: '$' },
+            'nrr': { name: 'NRR', description: 'Удержание дохода ( > 100% — супер)', category: 'Финансы',
+                icon: 'bi-arrow-repeat', unit: '%' },
+            'ltv': { name: 'LTV', description: 'Пожизненная ценность клиента', category: 'Финансы', icon: 'bi-clock-history',
+                unit: '$' },
+            'cac': { name: 'CAC', description: 'Стоимость привлечения клиента', category: 'Финансы', icon: 'bi-cash-stack',
+                unit: '$' },
+            'ltv_cac_ratio': { name: 'LTV/CAC Ratio', description: 'Соотношение LTV к CAC', category: 'Финансы',
+                icon: 'bi-arrow-left-right', unit: '' },
+            'payback_period': { name: 'Payback Period', description: 'Срок окупаемости CAC', category: 'Финансы',
+                icon: 'bi-calendar-check', unit: 'мес.' },
+            'expansion_revenue': { name: 'Expansion Revenue', description: 'Доход от апсейлов', category: 'Финансы',
+                icon: 'bi-arrow-up-circle', unit: '$' },
+            'downgrade_revenue': { name: 'Downgrade Revenue', description: 'Потеря дохода от даунгрейдов', category: 'Финансы',
+                icon: 'bi-arrow-down-circle', unit: '$' },
+            'churned_revenue': { name: 'Churned Revenue', description: 'Потеря дохода от ушедших', category: 'Финансы',
+                icon: 'bi-exclamation-triangle', unit: '$' },
+            'average_revenue_per_user': { name: 'ARPU', description: 'Средняя выручка на пользователя', category: 'Финансы',
+                icon: 'bi-person-badge', unit: '$' },
+            'average_revenue_per_paying_user': { name: 'ARPPU', description: 'Средняя выручка на платящего',
+                category: 'Финансы', icon: 'bi-person-check', unit: '$' },
+            'monthly_growth_rate': { name: 'Monthly Growth Rate', description: 'Темп роста MRR', category: 'Финансы',
+                icon: 'bi-graph-up-arrow', unit: '%' },
+
+            'customer_churn_rate': { name: 'Customer Churn Rate', description: 'Процент ушедших клиентов',
+                category: 'Отток и удержание', icon: 'bi-person-x', unit: '%' },
+            'revenue_churn_rate': { name: 'Revenue Churn Rate', description: 'Процент потерянной выручки',
+                category: 'Отток и удержание', icon: 'bi-cash-x', unit: '%' },
+            'net_churn_rate': { name: 'Net Churn Rate', description: 'Чистый отток с учётом Expansion', category: 'Отток и удержание',
+                icon: 'bi-arrow-left-right', unit: '%' },
+            'retention_rate': { name: 'Retention Rate', description: 'Процент оставшихся клиентов', category: 'Отток и удержание',
+                icon: 'bi-heart', unit: '%' },
+            'downgrade_rate': { name: 'Downgrade Rate', description: 'Процент перехода на дешёвый тариф',
+                category: 'Отток и удержание', icon: 'bi-arrow-down-circle', unit: '%' },
+            'upgrade_rate': { name: 'Upgrade Rate', description: 'Процент перехода на дорогой тариф', category: 'Отток и удержание',
+                icon: 'bi-arrow-up-circle', unit: '%' },
+            'reactivation_rate': { name: 'Reactivation Rate', description: 'Процент вернувшихся клиентов',
+                category: 'Отток и удержание', icon: 'bi-arrow-counterclockwise', unit: '%' },
+
+            'active_users': { name: 'Активные пользователи', description: 'Количество активных пользователей',
+                category: 'Активность', icon: 'bi-people', unit: '' },
+            'churned_users': { name: 'Ушедшие пользователи', description: 'Количество ушедших', category: 'Активность',
+                icon: 'bi-person-x', unit: '' },
+            'trial_users': { name: 'Триал-пользователи', description: 'Количество на пробном периоде', category: 'Активность',
+                icon: 'bi-clock', unit: '' },
+            'new_users': { name: 'Новые пользователи', description: 'Зарегистрировались за период', category: 'Активность',
+                icon: 'bi-person-plus', unit: '' },
+            'daily_active_users': { name: 'DAU', description: 'Уникальных пользователей в день', category: 'Активность',
+                icon: 'bi-calendar-day', unit: '' },
+            'weekly_active_users': { name: 'WAU', description: 'Уникальных пользователей в неделю', category: 'Активность',
+                icon: 'bi-calendar-week', unit: '' },
+            'monthly_active_users': { name: 'MAU', description: 'Уникальных пользователей в месяц', category: 'Активность',
+                icon: 'bi-calendar-month', unit: '' },
+            'stickiness_ratio': { name: 'Stickiness Ratio', description: 'DAU / MAU', category: 'Активность',
+                icon: 'bi-heart', unit: '%' },
+
+            'trial_conversion_rate': { name: 'Trial Conversion', description: 'Конверсия из триала в платный',
+                category: 'Воронка', icon: 'bi-arrow-right-circle', unit: '%' },
+            'time_to_value': { name: 'Time to Value', description: 'Время до получения пользы', category: 'Воронка',
+                icon: 'bi-clock', unit: 'дней' },
+            'lead_to_mql_conversion': { name: 'Lead → MQL', description: 'Процент лидов → MQL', category: 'Воронка',
+                icon: 'bi-arrow-right-circle', unit: '%' },
+            'mql_to_sql_conversion': { name: 'MQL → SQL', description: 'Процент MQL → SQL', category: 'Воронка',
+                icon: 'bi-arrow-right-circle', unit: '%' },
+            'sql_to_closed_won': { name: 'SQL → Closed-Won', description: 'Процент SQL → Сделки', category: 'Воронка',
+                icon: 'bi-arrow-right-circle', unit: '%' },
+
+            'feature_adoption_rate': { name: 'Feature Adoption', description: 'Процент использующих ключевую функцию',
+                category: 'Продукт', icon: 'bi-grid-3x3-gap', unit: '%' },
+            'average_session_duration': { name: 'Ср. длительность сессии', description: 'Средняя продолжительность сессии',
+                category: 'Продукт', icon: 'bi-clock', unit: 'мин' },
+            'sessions_per_user': { name: 'Sessions per User', description: 'Сессий на пользователя', category: 'Продукт',
+                icon: 'bi-arrow-repeat', unit: '' },
+            'bounce_rate': { name: 'Bounce Rate', description: 'Процент ухода после 1 страницы', category: 'Продукт',
+                icon: 'bi-door-open', unit: '%' },
+
+            'average_order_value': { name: 'Средний чек (AOV)', description: 'Средняя стоимость заказа',
+                category: 'E-commerce', icon: 'bi-cart-check', unit: '$' },
+            'conversion_rate': { name: 'Conversion Rate', description: 'Процент посетителей с покупкой',
+                category: 'E-commerce', icon: 'bi-percent', unit: '%' },
+            'cart_abandonment_rate': { name: 'Cart Abandonment', description: 'Процент брошенных корзин',
+                category: 'E-commerce', icon: 'bi-cart-x', unit: '%' },
+            'return_rate': { name: 'Return Rate', description: 'Процент возвратов товаров', category: 'E-commerce',
+                icon: 'bi-arrow-counterclockwise', unit: '%' },
+            'customer_lifetime_value': { name: 'CLV', description: 'Пожизненная ценность клиента', category: 'E-commerce',
+                icon: 'bi-clock-history', unit: '$' },
+            'repurchase_rate': { name: 'Repurchase Rate', description: 'Процент повторных покупок', category: 'E-commerce',
+                icon: 'bi-arrow-repeat', unit: '%' },
+
+            'transaction_volume': { name: 'Объем транзакций', description: 'Общий объем транзакций', category: 'FinTech',
+                icon: 'bi-credit-card', unit: '$' },
+            'average_transaction_value': { name: 'Средняя транзакция', description: 'Средняя сумма транзакции',
+                category: 'FinTech', icon: 'bi-piggy-bank', unit: '$' },
+            'fraud_rate': { name: 'Fraud Rate', description: 'Процент мошеннических транзакций', category: 'FinTech',
+                icon: 'bi-shield-exclamation', unit: '%' },
+            'net_interest_margin': { name: 'Net Interest Margin', description: 'Чистая процентная маржа',
+                category: 'FinTech', icon: 'bi-graph-up-arrow', unit: '%' },
+            'transaction_success_rate': { name: 'Transaction Success', description: 'Процент успешных транзакций',
+                category: 'FinTech', icon: 'bi-check-circle', unit: '%' },
+
+            'average_subscription_length': { name: 'Ср. длина подписки', description: 'Среднее количество месяцев',
+                category: 'Подписки', icon: 'bi-clock', unit: 'мес.' },
+            'payment_failure_rate': { name: 'Payment Failure', description: 'Процент неудачных списаний',
+                category: 'Подписки', icon: 'bi-exclamation-octagon', unit: '%' },
+            'dunning_success_rate': { name: 'Dunning Success', description: 'Процент успешных повторных списаний',
+                category: 'Подписки', icon: 'bi-arrow-clockwise', unit: '%' },
+
+            'inventory_turnover': { name: 'Оборачиваемость запасов', description: 'Скорость оборота товаров',
+                category: 'Операционные', icon: 'bi-arrow-left-right', unit: 'раз' },
+            'staff_efficiency': { name: 'Эффективность персонала', description: 'Выручка на сотрудника',
+                category: 'Операционные', icon: 'bi-person-gear', unit: '$' },
+            'footfall': { name: 'Посещаемость', description: 'Количество посетителей', category: 'Операционные',
+                icon: 'bi-people', unit: '' },
+            'average_check': { name: 'Средний чек', description: 'Средняя сумма покупки', category: 'Операционные',
+                icon: 'bi-receipt', unit: '$' },
+            'loyalty_rate': { name: 'Loyalty Rate', description: 'Процент повторных покупок', category: 'Операционные',
+                icon: 'bi-heart', unit: '%' },
+            'net_promoter_score': { name: 'NPS', description: 'Оценка лояльности (-100 до +100)', category: 'Операционные',
+                icon: 'bi-emoji-smile', unit: '' },
+
+            'support_ticket_volume': { name: 'Обращения в поддержку', description: 'Количество обращений',
+                category: 'Качество сервиса', icon: 'bi-ticket', unit: '' },
+            'average_response_time': { name: 'Ср. время ответа', description: 'Среднее время ответа (часы)',
+                category: 'Качество сервиса', icon: 'bi-clock', unit: 'ч' },
+            'average_resolution_time': { name: 'Ср. время решения', description: 'Среднее время решения (часы)',
+                category: 'Качество сервиса', icon: 'bi-clock-history', unit: 'ч' },
+            'csat': { name: 'CSAT', description: 'Удовлетворённость клиентов (1-5)', category: 'Качество сервиса',
+                icon: 'bi-star', unit: '' },
+
+            'marketing_roi': { name: 'Marketing ROI', description: 'Возврат на маркетинг', category: 'Маркетинг',
+                icon: 'bi-graph-up-arrow', unit: '%' },
+            'lead_velocity_rate': { name: 'Lead Velocity Rate', description: 'Темп роста лидов', category: 'Маркетинг',
+                icon: 'bi-speedometer2', unit: '%' },
+            'cost_per_lead': { name: 'CPL', description: 'Стоимость одного лида', category: 'Маркетинг',
+                icon: 'bi-cash', unit: '$' },
+            'cost_per_acquisition': { name: 'CPA', description: 'Стоимость привлечения клиента', category: 'Маркетинг',
+                icon: 'bi-cash-stack', unit: '$' }
         };
 
-        // 1. Метрики
-        const metricsMap = {
-            revenue: { icon: 'bi-cash', name: 'Выручка', unit: '$' },
-            mrr: { icon: 'bi-graph-up', name: 'MRR', unit: '$' },
-            nrr: { icon: 'bi-arrow-repeat', name: 'NRR', unit: '%' },
-            churn: { icon: 'bi-exclamation-triangle', name: 'Churn', unit: '%' },
-            arpu: { icon: 'bi-person-badge', name: 'ARPU', unit: '$' },
-            active_users: { icon: 'bi-people', name: 'Активные', unit: '' },
-            churned_users: { icon: 'bi-person-x', name: 'Ушедшие', unit: '' }
-        };
+        const METRIC_IDS = Object.keys(METRICS_REGISTRY);
+        const CATEGORIES = [...new Set(Object.values(METRICS_REGISTRY).map(m => m.category))];
 
-        const row = document.getElementById('metricsRow');
-        for (const [key, val] of Object.entries(data.metrics)) {
-            const meta = metricsMap[key];
-            if (!meta) continue;
-            const col = document.createElement('div');
-            col.className = 'col-md-3 col-sm-6 mb-3';
-            col.innerHTML = `
-                <div class="card stat-card h-100">
-                    <div class="card-body">
-                        <div class="metric-label"><i class="${meta.icon}"></i> ${meta.name}</div>
-                        <div class="number">${meta.unit === '$' ? '$' : ''}${val.toFixed(1)}${meta.unit === '%' ? '%' : ''}</div>
-                    </div>
-                </div>
-            `;
-            row.appendChild(col);
+        // ============================================================
+        // 2. РАБОТА С LOCALSTORAGE (БАЗА ДАННЫХ В БРАУЗЕРЕ)
+        // ============================================================
+        function getUsers() { return JSON.parse(localStorage.getItem('percepta_users') || '{}'); }
+
+        function saveUsers(users) { localStorage.setItem('percepta_users', JSON.stringify(users)); }
+
+        function getData(email) {
+            const all = JSON.parse(localStorage.getItem('percepta_data') || '{}');
+            return all[email] || null;
         }
 
-        // 2. График MRR
-        const trace = {
-            x: data.mrrHistory.months,
-            y: data.mrrHistory.values,
-            type: 'scatter',
-            mode: 'lines+markers',
-            line: { color: '#6f42c1', width: 3 },
-            marker: { color: '#6f42c1', size: 8 }
-        };
-        Plotly.newPlot('mrrChart', [trace], {
-            margin: { t: 20, r: 20, l: 50, b: 40 },
-            yaxis: { title: 'MRR, $' },
-            font: { family: 'Segoe UI, sans-serif' }
+        function saveData(email, data) {
+            const all = JSON.parse(localStorage.getItem('percepta_data') || '{}');
+            all[email] = data;
+            localStorage.setItem('percepta_data', JSON.stringify(all));
+        }
+
+        function getSettings(email) {
+            const all = JSON.parse(localStorage.getItem('percepta_settings') || '{}');
+            return all[email] || { vertical: 'saas', selected_metrics: [] };
+        }
+
+        function saveSettings(email, settings) {
+            const all = JSON.parse(localStorage.getItem('percepta_settings') || '{}');
+            all[email] = settings;
+            localStorage.setItem('percepta_settings', JSON.stringify(all));
+        }
+
+        // ============================================================
+        // 3. АВТОРИЗАЦИЯ
+        // ============================================================
+        let currentUser = null;
+        let userData = null;
+        let userSettings = null;
+
+        function showSection(section) {
+            ['loginSection', 'registerSection', 'dashboardSection', 'uploadSection', 'settingsSection']
+            .forEach(id => document.getElementById(id).classList.add('hidden'));
+            document.getElementById(section + 'Section').classList.remove('hidden');
+        }
+
+        function showLogin() {
+            document.getElementById('loginSection').classList.remove('hidden');
+            document.getElementById('registerSection').classList.add('hidden');
+        }
+
+        function showRegister() {
+            document.getElementById('registerSection').classList.remove('hidden');
+            document.getElementById('loginSection').classList.add('hidden');
+        }
+
+        function showMessage(text, type = 'success') {
+            const div = document.getElementById('messages');
+            div.innerHTML =
+                `<div class="alert alert-${type} alert-dismissible fade show">${text}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const users = getUsers();
+            if (!users[email] || users[email].password !== password) {
+                showMessage('Неверный email или пароль', 'danger');
+                return;
+            }
+            currentUser = email;
+            userData = getData(email);
+            userSettings = getSettings(email);
+            document.getElementById('navLogin').classList.add('hidden');
+            document.getElementById('navLogoutLi').classList.remove('hidden');
+            showMessage('Вход выполнен!', 'success');
+            showSection('dashboard');
+            renderDashboard();
         });
 
-        // 3. Когортная таблица
-        let cohortHtml = `
-            <table class="table table-bordered table-sm text-center" style="min-width: 300px;">
-                <thead><tr><th>Месяц</th><th>1 мес</th><th>2 мес</th><th>3 мес</th></tr></thead>
-                <tbody>
-        `;
-        for (let i = 0; i < data.cohort.months.length; i++) {
-            cohortHtml += `<tr><td><strong>${data.cohort.months[i]}</strong></td>`;
-            for (let j = 0; j < 3; j++) {
-                const val = data.cohort.data[i][j] || 0;
-                const color = val >= 80 ? '#27ae60' : val >= 50 ? '#f1c40f' : '#ecf0f1';
-                const textColor = val >= 50 ? 'white' : 'black';
-                cohortHtml += `<td style="background:${color};color:${textColor};">${val}%</td>`;
-            }
-            cohortHtml += `</tr>`;
-        }
-        cohortHtml += '</tbody></table>';
-        document.getElementById('cohortTable').innerHTML = cohortHtml;
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('regEmail').value.trim();
+            const company = document.getElementById('regCompany').value.trim();
+            const vertical = document.getElementById('regVertical').value;
+            const password = document.getElementById('regPassword').value;
+            if (password.length < 4) { showMessage('Пароль должен быть минимум 4 символа', 'danger'); return; }
+            const users = getUsers();
+            if (users[email]) { showMessage('Пользователь уже существует', 'danger'); return; }
+            users[email] = { email, company, vertical, password, created_at: new Date().toISOString() };
+            saveUsers(users);
+            showMessage('Регистрация успешна! Теперь войдите.', 'success');
+            showLogin();
+        });
 
-        // 4. Рискованные клиенты
-        if (data.riskyClients.length > 0) {
-            let riskHtml = `
-                <table class="table table-hover">
-                    <thead><tr><th>ID</th><th>Выручка</th><th>Активность</th><th>Риск</th><th>Причины</th></tr></thead>
-                    <tbody>
-            `;
-            for (const client of data.riskyClients) {
-                const color = client.risk >= 70 ? 'text-danger' : 'text-warning';
-                riskHtml += `
-                    <tr>
-                        <td>#${client.id}</td>
-                        <td>$${client.revenue.toFixed(2)}</td>
-                        <td>${client.last_activity}</td>
-                        <td><span class="${color}">${client.risk}%</span></td>
-                        <td>${client.reasons.map(r => `<span class="badge bg-danger">${r}</span>`).join(' ')}</td>
-                    </tr>
-                `;
-            }
-            riskHtml += '</tbody></table>';
-            document.getElementById('riskyClients').innerHTML = riskHtml;
-        } else {
-            document.getElementById('riskyClients').innerHTML = '<div class="alert alert-success">Отлично! Клиенты в зоне риска не найдены.</div>';
+        function logout() {
+            currentUser = null;
+            userData = null;
+            userSettings = null;
+            document.getElementById('navLogin').classList.remove('hidden');
+            document.getElementById('navLogoutLi').classList.add('hidden');
+            showLogin();
+            showMessage('Вы вышли из системы', 'info');
         }
+
+        // ============================================================
+        // 4. ЗАГРУЗКА И ОБРАБОТКА CSV
+        // ============================================================
+        document.getElementById('dropZone').addEventListener('click', () => document.getElementById('fileInput').click());
+        document.getElementById('dropZone').addEventListener('dragover', (e) => { e.preventDefault();
+            document.getElementById('dropZone').style.background = '#e8d5ff'; });
+        document.getElementById('dropZone').addEventListener('dragleave', () => { document.getElementById('dropZone').style
+                .background = '#fafafa'; });
+        document.getElementById('dropZone').addEventListener('drop', (e) => {
+            e.preventDefault();
+            document.getElementById('dropZone').style.background = '#fafafa';
+            document.getElementById('fileInput').files = e.dataTransfer.files;
+            uploadFile();
+        });
+
+        function uploadFile() {
+            const file = document.getElementById('fileInput').files[0];
+            if (!file) { showMessage('Выберите файл', 'warning'); return; }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const text = e.target.result;
+                    const lines = text.split('\n').filter(line => line.trim());
+                    if (lines.length < 2) { showMessage('Файл пуст', 'danger'); return; }
+                    const headers = lines[0].split(',').map(h => h.trim());
+                    const data = lines.slice(1).map(line => {
+                        const vals = line.split(',');
+                        const obj = {};
+                        headers.forEach((h, i) => obj[h] = vals[i] ? vals[i].trim() : '');
+                        return obj;
+                    });
+                    // Проверяем обязательные колонки
+                    const required = ['user_id', 'date', 'revenue', 'status'];
+                    const missing = required.filter(r => !headers.includes(r));
+                    if (missing.length) {
+                        showMessage('Отсутствуют колонки: ' + missing.join(', '), 'danger');
+                        return;
+                    }
+                    // Сохраняем
+                    userData = processData(data);
+                    saveData(currentUser, userData);
+                    showMessage('Файл загружен и обработан!', 'success');
+                    renderDashboard();
+                } catch (err) {
+                    showMessage('Ошибка: ' + err.message, 'danger');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // ============================================================
+        // 5. РАСЧЕТ МЕТРИК (ЯДРО)
+        // ============================================================
+        function processData(data) {
+            const df = data.map(row => ({
+                user_id: parseInt(row.user_id) || 0,
+                date: new Date(row.date),
+                revenue: parseFloat(row.revenue) || 0,
+                status: row.status || 'unknown',
+                last_activity_date: row.last_activity_date ? new Date(row.last_activity_date) : new Date(),
+                support_ticket_text: row.support_ticket_text || ''
+            }));
+
+            const today = new Date();
+            const thisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+            const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+            const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+
+            const totalUsers = new Set(df.map(r => r.user_id)).size;
+            const activeUsers = new Set(df.filter(r => r.status === 'active').map(r => r.user_id)).size;
+            const churnedUsers = new Set(df.filter(r => r.status === 'churned').map(r => r.user_id)).size;
+
+            const totalRevenue = df.reduce((s, r) => s + r.revenue, 0);
+            const mrr = df.filter(r => r.status === 'active' && r.date >= thisMonth && r.date < nextMonth)
+                .reduce((s, r) => s + r.revenue, 0);
+
+            // MRR за прошлый месяц для роста
+            const mrrLastMonth = df.filter(r => r.status === 'active' && r.date >= lastMonth && r.date < thisMonth)
+                .reduce((s, r) => s + r.revenue, 0);
+
+            const arpu = activeUsers ? mrr / activeUsers : 0;
+
+            // Когорты
+            const cohorts = {};
+            df.forEach(r => {
+                if (r.status === 'active') {
+                    const key = r.date.getMonth() + '-' + r.date.getFullYear();
+                    if (!cohorts[key]) cohorts[key] = { total: 0, active: 0 };
+                    cohorts[key].total++;
+                    if (r.status === 'active') cohorts[key].active++;
+                }
+            });
+
+            const cohortData = Object.entries(cohorts).map(([key, val]) => ({
+                month: key,
+                retention: val.total ? Math.round((val.active / val.total) * 100) : 0
+            }));
+
+            // Рискованные клиенты
+            const riskyClients = df
+                .filter(r => r.status === 'active')
+                .map(r => {
+                    let risk = 0;
+                    const reasons = [];
+                    const daysInactive = Math.floor((today - r.last_activity_date) / (1000 * 60 * 60 * 24));
+                    if (daysInactive > 7) { risk += 40;
+                        reasons.push(`Не заходил ${daysInactive} дней`); }
+                    const negWords = ['дорого', 'дороговато', 'отказ', 'альтернатив', 'не подошел', 'не устроил'];
+                    if (r.support_ticket_text) {
+                        negWords.forEach(w => {
+                            if (r.support_ticket_text.toLowerCase().includes(w)) { risk += 30;
+                                reasons.push(`Написал: "${r.support_ticket_text}"`); }
+                        });
+                    }
+                    const hasPaymentThisMonth = df.some(d => d.user_id === r.user_id && d.date >= thisMonth && d.status ===
+                        'active');
+                    if (!hasPaymentThisMonth) { risk += 30;
+                        reasons.push('Нет платежа в текущем месяце'); }
+                    return { user_id: r.user_id, risk, reasons, revenue: r.revenue, last_activity: r.last_activity_date
+                            .toISOString().split('T')[0] };
+                })
+                .filter(r => r.risk >= 40)
+                .sort((a, b) => b.risk - a.risk)
+                .slice(0, 10);
+
+            // MRR история (за последние 6 месяцев)
+            const mrrHistory = [];
+            for (let i = 5; i >= 0; i--) {
+                const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+                const dNext = new Date(today.getFullYear(), today.getMonth() - i + 1, 1);
+                const val = df.filter(r => r.status === 'active' && r.date >= d && r.date < dNext)
+                    .reduce((s, r) => s + r.revenue, 0);
+                mrrHistory.push({ month: d.toLocaleString('ru', { month: 'short' }), value: val });
+            }
+
+            return {
+                metrics: {
+                    revenue: totalRevenue,
+                    mrr: mrr,
+                    arr: mrr * 12,
+                    nrr: 112.5, // заглушка
+                    ltv: arpu * 3,
+                    cac: arpu * 3,
+                    payback_period: 3,
+                    average_revenue_per_user: arpu,
+                    monthly_growth_rate: mrrLastMonth ? ((mrr - mrrLastMonth) / mrrLastMonth) * 100 : 0,
+                    active_users: activeUsers,
+                    churned_users: churnedUsers,
+                    customer_churn_rate: activeUsers ? (churnedUsers / (activeUsers + churnedUsers)) * 100 : 0,
+                    retention_rate: activeUsers ? ((activeUsers - churnedUsers) / activeUsers) * 100 : 100,
+                    // E-commerce
+                    average_order_value: df.filter(r => r.revenue > 0).length ? df.filter(r => r.revenue > 0).reduce((
+                        s, r) => s + r.revenue, 0) / df.filter(r => r.revenue > 0).length : 0,
+                    // FinTech
+                    transaction_volume: totalRevenue,
+                    average_transaction_value: df.filter(r => r.revenue > 0).length ? df.filter(r => r.revenue > 0)
+                        .reduce((s, r) => s + r.revenue, 0) / df.filter(r => r.revenue > 0).length : 0,
+                    // Операционные
+                    loyalty_rate: activeUsers ? ((activeUsers - churnedUsers) / activeUsers) * 100 : 0
+                },
+                cohort: cohortData,
+                risky_clients: riskyClients,
+                mrr_history: mrrHistory,
+                total_users: totalUsers,
+                active_users: activeUsers,
+                churned_users: churnedUsers,
+                last_updated: new Date().toLocaleString()
+            };
+        }
+
+        // ============================================================
+        // 6. ОТРИСОВКА ДАШБОРДА
+        // ============================================================
+        function renderDashboard() {
+            if (!currentUser || !userData) {
+                document.getElementById('lastUpdated').textContent = 'Нет данных';
+                document.getElementById('metricsRow').innerHTML =
+                    '<div class="col-12"><div class="alert alert-info">Загрузите данные через раздел "Загрузить"</div></div>';
+                document.getElementById('cohortTable').innerHTML = '';
+                document.getElementById('riskyClients').innerHTML = '';
+                document.getElementById('mrrChart').innerHTML = '';
+                return;
+            }
+
+            const data = userData;
+            document.getElementById('lastUpdated').textContent = 'Обновлено: ' + (data.last_updated || 'только что');
+
+            // Метрики
+            const metrics = data.metrics || {};
+            const row = document.getElementById('metricsRow');
+            row.innerHTML = '';
+            const selected = userSettings?.selected_metrics || [];
+
+            let displayMetrics = selected.length ? selected : ['revenue', 'mrr', 'nrr', 'active_users', 'arpu'];
+
+            displayMetrics.forEach(id => {
+                if (!METRICS_REGISTRY[id]) return;
+                const meta = METRICS_REGISTRY[id];
+                const val = metrics[id];
+                if (val === undefined) return;
+                const col = document.createElement('div');
+                col.className = 'col-md-3 col-sm-6 mb-3';
+                const unit = meta.unit;
+                let displayVal = typeof val === 'number' ? val.toFixed(1) : val;
+                if (unit === '$') displayVal = '$' + displayVal;
+                if (unit === '%') displayVal = displayVal + '%';
+                if (unit === 'мес.') displayVal = displayVal + ' мес.';
+                col.innerHTML = `
+                    <div class="card stat-card h-100">
+                        <div class="card-body">
+                            <div class="metric-label"><i class="${meta.icon}"></i> ${meta.name}</div>
+                            <div class="number">${displayVal}</div>
+                            <small class="text-muted">${meta.description}</small>
+                        </div>
+                    </div>
+                `;
+                row.appendChild(col);
+            });
+
+            // График MRR
+            if (data.mrr_history && data.mrr_history.length) {
+                const trace = {
+                    x: data.mrr_history.map(d => d.month),
+                    y: data.mrr_history.map(d => d.value),
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    line: { color: '#6f42c1', width: 3 },
+                    marker: { color: '#6f42c1', size: 8 }
+                };
+                Plotly.newPlot('mrrChart', [trace], {
+                    margin: { t: 20, r: 20, l: 50, b: 40 },
+                    yaxis: { title: 'MRR, $' },
+                    font: { family: 'Segoe UI, sans-serif' }
+                });
+            } else {
+                document.getElementById('mrrChart').innerHTML =
+                    '<div class="text-center text-muted">Недостаточно данных для графика</div>';
+            }
+
+            // Когорты
+            if (data.cohort && data.cohort.length) {
+                let html =
+                    '<table class="table table-bordered table-sm text-center"><thead><tr><th>Месяц</th><th>Удержание, %</th></tr></thead><tbody>';
+                data.cohort.forEach(c => {
+                    const color = c.retention >= 80 ? '#27ae60' : c.retention >= 50 ? '#f1c40f' : '#ecf0f1';
+                    const textColor = c.retention >= 50 ? 'white' : 'black';
+                    html += `<tr><td><strong>${c.month}</strong></td>
+                             <td style="background:${color};color:${textColor};">${c.retention}%</td></tr>`;
+                });
+                html += '</tbody></table>';
+                document.getElementById('cohortTable').innerHTML = html;
+            } else {
+                document.getElementById('cohortTable').innerHTML =
+                    '<div class="text-muted">Недостаточно данных для когортного анализа</div>';
+            }
+
+            // Рискованные клиенты
+            if (data.risky_clients && data.risky_clients.length) {
+                let html =
+                    '<div class="table-responsive"><table class="table table-hover"><thead><tr><th>ID</th><th>Выручка</th><th>Активность</th><th>Риск</th><th>Причины</th></tr></thead><tbody>';
+                data.risky_clients.forEach(c => {
+                    const cls = c.risk >= 70 ? 'risk-high' : c.risk >= 40 ? 'risk-medium' : 'risk-low';
+                    html += `<tr>
+                        <td>#${c.user_id}</td>
+                        <td>$${c.revenue.toFixed(2)}</td>
+                        <td>${c.last_activity}</td>
+                        <td><span class="${cls}">${c.risk}%</span></td>
+                        <td>${c.reasons.map(r => `<span class="badge bg-danger">${r}</span>`).join(' ')}</td>
+                    </tr>`;
+                });
+                html += '</tbody></table></div>';
+                document.getElementById('riskyClients').innerHTML = html;
+            } else {
+                document.getElementById('riskyClients').innerHTML =
+                    '<div class="alert alert-success">✅ Отлично! Клиенты в зоне риска не найдены.</div>';
+            }
+        }
+
+        // ============================================================
+        // 7. НАСТРОЙКИ
+        // ============================================================
+        function renderSettings() {
+            const container = document.getElementById('settingsMetrics');
+            container.innerHTML = '';
+            const selected = userSettings?.selected_metrics || [];
+
+            CATEGORIES.forEach(cat => {
+                const metrics = Object.entries(METRICS_REGISTRY)
+                    .filter(([id, m]) => m.category === cat);
+                if (!metrics.length) return;
+                const col = document.createElement('div');
+                col.className = 'col-md-6 mb-4';
+                let html = `<div class="card h-100"><div class="card-header bg-light"><h6 class="mb-0">${cat}</h6></div>
+                           <div class="card-body pre-scrollable">`;
+                metrics.forEach(([id, m]) => {
+                    const checked = selected.includes(id) ? 'checked' : '';
+                    html += `<div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="metric" value="${id}" ${checked}>
+                        <label class="form-check-label">
+                            <i class="${m.icon}"></i> <strong>${m.name}</strong><br>
+                            <small class="text-muted">${m.description}</small>
+                            <span class="badge bg-light text-dark float-end">${m.unit}</span>
+                        </label>
+                    </div>`;
+                });
+                html += '</div></div>';
+                col.innerHTML = html;
+                container.appendChild(col);
+            });
+        }
+
+        document.getElementById('settingsForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const selected = Array.from(document.querySelectorAll('input[name="metric"]:checked'))
+                .map(el => el.value);
+            userSettings = userSettings || { vertical: 'saas' };
+            userSettings.selected_metrics = selected;
+            saveSettings(currentUser, userSettings);
+            showMessage('Настройки сохранены!', 'success');
+            renderDashboard();
+        });
+
+        // ============================================================
+        // 8. ИНИЦИАЛИЗАЦИЯ
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', function() {
+            // Проверяем авторизацию
+            const users = getUsers();
+            const savedUser = localStorage.getItem('percepta_session');
+            if (savedUser && users[savedUser]) {
+                currentUser = savedUser;
+                userData = getData(savedUser);
+                userSettings = getSettings(savedUser);
+                document.getElementById('navLogin').classList.add('hidden');
+                document.getElementById('navLogoutLi').classList.remove('hidden');
+                showSection('dashboard');
+                renderDashboard();
+            } else {
+                showLogin();
+            }
+            // Настройки при переходе
+            document.querySelector('#navSettings').addEventListener('click', function() {
+                if (currentUser) renderSettings();
+            });
+        });
+
+        // Сохраняем сессию
+        window.addEventListener('beforeunload', function() {
+            if (currentUser) localStorage.setItem('percepta_session', currentUser);
+            else localStorage.removeItem('percepta_session');
+        });
+
+        console.log('✅ Percepta загружен!');
+        console.log('📊 Доступно метрик:', METRIC_IDS.length);
+        console.log('📂 Категории:', CATEGORIES);
+        console.log('💡 Тестовый пользователь: test@percepta.com / password123');
     </script>
 </body>
 </html>
