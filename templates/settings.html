@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title mb-3">
+                    <i class="bi bi-sliders2 text-primary"></i> Конструктор дашборда
+                </h4>
+                <p class="text-muted">
+                    Настройте, какие метрики отображать на дашборде. 
+                    Всего доступно <strong>{{ all_metrics_count }}</strong> метрик.
+                </p>
+                <hr>
+
+                <form method="POST" action="{{ url_for('save_settings') }}">
+                    <!-- Выбор вертикали -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Тип бизнеса</label>
+                            <select name="vertical" class="form-select" id="verticalSelect">
+                                {% for v in all_verticals %}
+                                    <option value="{{ v.id }}" {% if v.id == current_user.vertical %}selected{% endif %}>
+                                        {{ v.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <small class="text-muted">Смена вертикали обновит список метрик</small>
+                        </div>
+                        <div class="col-md-6 d-flex align-items-end">
+                            <div class="form-text">
+                                <i class="bi bi-info-circle"></i>
+                                {% if current_user.vertical == 'custom' %}
+                                    <span class="badge bg-primary">Режим "Прочее"</span> — доступны все метрики
+                                {% else %}
+                                    <span class="badge bg-secondary">Вертикаль: {{ vertical.name }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Кнопка создания метрики -->
+                    <div class="mb-3">
+                        <a href="{{ url_for('create_metric') }}" class="btn btn-outline-primary">
+                            <i class="bi bi-wand-2"></i> Создать свою метрику через AI
+                        </a>
+                    </div>
+
+                    <!-- Метрики по категориям -->
+                    <div class="row">
+                        {% for category in categories %}
+                            {% if categories_metrics[category] %}
+                            <div class="col-md-6 mb-4">
+                                <div class="card h-100">
+                                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0">{{ category }}</h6>
+                                        <span class="badge bg-secondary">{{ categories_metrics[category]|length }}</span>
+                                    </div>
+                                    <div class="card-body" style="max-height: 300px; overflow-y: auto;">
+                                        {% for metric in categories_metrics[category] %}
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" 
+                                                   name="metrics" value="{{ metric.id }}"
+                                                   id="metric_{{ metric.id }}"
+                                                   {% if metric.id in selected_ids %}checked{% endif %}>
+                                            <label class="form-check-label" for="metric_{{ metric.id }}">
+                                                <i class="{{ metric.icon }}"></i>
+                                                <strong>{{ metric.name }}</strong>
+                                                <br>
+                                                <small class="text-muted">{{ metric.description }}</small>
+                                                <span class="badge bg-light text-dark float-end">{{ metric.unit }}</span>
+                                            </label>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+
+                    <!-- Кнопки управления -->
+                    <div class="mt-3 d-flex flex-wrap gap-2">
+                        <button type="submit" class="btn btn-primary-custom">
+                            <i class="bi bi-save"></i> Сохранить
+                        </button>
+                        <button type="button" class="btn btn-outline-success" id="selectAllBtn">
+                            <i class="bi bi-check-all"></i> Выбрать все
+                        </button>
+                        <button type="button" class="btn btn-outline-danger" id="deselectAllBtn">
+                            <i class="bi bi-x-circle"></i> Снять все
+                        </button>
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-speedometer2"></i> Дашборд
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('selectAllBtn').addEventListener('click', function() {
+        document.querySelectorAll('input[name="metrics"]').forEach(cb => cb.checked = true);
+    });
+    document.getElementById('deselectAllBtn').addEventListener('click', function() {
+        document.querySelectorAll('input[name="metrics"]').forEach(cb => cb.checked = false);
+    });
+    
+    // При смене вертикали перезагружаем страницу
+    document.getElementById('verticalSelect').addEventListener('change', function() {
+        window.location.href = "{{ url_for('settings') }}?vertical=" + this.value;
+    });
+</script>
+{% endblock %}

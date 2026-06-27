@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% if not has_data %}
+<div class="row justify-content-center">
+    <div class="col-md-8 text-center">
+        <div class="card">
+            <div class="card-body py-5">
+                <i class="bi bi-bar-chart-line" style="font-size: 4rem; color: #6f42c1;"></i>
+                <h3 class="mt-3">Добро пожаловать в Percepta!</h3>
+                <p class="text-muted">Загрузите данные ваших клиентов, чтобы увидеть аналитику</p>
+                <a href="{{ url_for('upload_file') }}" class="btn btn-primary-custom">
+                    <i class="bi bi-cloud-upload"></i> Загрузить данные
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="row">
+    <div class="col-12">
+        <h4 class="mb-3">📊 Дашборд Percepta</h4>
+        <p class="text-muted">Обновлено: {{ data.last_updated }}</p>
+    </div>
+</div>
+<div class="row mb-4">
+    {% if current_user.selected_metrics %}
+        {% for metric_id in current_user.selected_metrics %}
+            {% if metric_id.startswith('custom_') %}
+                {% set custom_id = metric_id.split('_')[1] %}
+                {% set custom_metric = get_custom_metric(custom_id) %}
+                {% if custom_metric and custom_metric.id in data.metrics %}
+                    {% set value = data.metrics[custom_metric.id] %}
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="card stat-card h-100" style="border-left: 4px solid #6f42c1;">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="metric-label"><i class="bi bi-wand-2"></i> {{ custom_metric.name }}</div>
+                                        <div class="number">{{ "%.2f"|format(value) if value is number else value }}</div>
+                                    </div>
+                                    <span class="badge bg-info">AI</span>
+                                </div>
+                                <small class="text-muted">{{ custom_metric.description }}</small>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            {% else %}
+                {% if metric_id in data.metrics %}
+                    {% set value = data.metrics[metric_id] %}
+                    {% set metric_meta = get_metric_metadata(metric_id) %}
+                    {% if metric_meta %}
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="card stat-card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="metric-label"><i class="{{ metric_meta.icon }}"></i> {{ metric_meta.name }}</div>
+                                        <div class="number">
+                                            {% if metric_meta.unit == '%' %}{{ "%.1f"|format(value) }}%
+                                            {% elif metric_meta.unit == '$' %}${{ "%.2f"|format(value) }}
+                                            {% else %}{{ "%.1f"|format(value) }} {{ metric_meta.unit }}{% endif %}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        {% if metric_id == 'nrr' %}
+                                            <span class="badge {% if value >= 100 %}bg-success{% else %}bg-danger{% endif %}">{% if value >= 100 %}✅{% else %}⚠️{% endif %}</span>
+                                        {% elif metric_id == 'churn' %}
+                                            <span class="badge {% if value < 5 %}bg-success{% elif value < 10 %}bg-warning{% else %}bg-danger{% endif %}">{% if value < 5 %}🟢{% elif value < 10 %}🟡{% else %}🔴{% endif %}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <small class="text-muted">{{ metric_meta.description }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+    {% else %}
+        {% for metric_id, value in data.metrics.items() %}
+            {% set metric_meta = get_metric_metadata(metric_id) %}
+            {% if metric_meta %}
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card stat-card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="metric-label"><i class="{{ metric_meta.icon }}"></i> {{ metric_meta.name }}</div>
+                                <div class="number">
+                                    {% if metric_meta.unit == '%' %}{{ "%.1f"|format(value) }}%
+                                    {% elif metric_meta.unit == '$' %}${{ "%.2f"|format(value) }}
+                                    {% else %}{{ "%.1f"|format(value) }} {{ metric_meta.unit }}{% endif %}
+                                </div>
+                            </div>
+                            <div>
+                                {% if metric_id == 'nrr' %}
+                                    <span class="badge {% if value >= 100 %}bg-success{% else %}bg-danger{% endif %}">{% if value >= 100 %}✅{% else %}⚠️{% endif %}</span>
+                                {% elif metric_id == 'churn' %}
+                                    <span class="badge {% if value < 5 %}bg-success{% elif value < 10 %}bg-warning{% else %}bg-danger{% endif %}">{% if value < 5 %}🟢{% elif value < 10 %}🟡{% else %}🔴{% endif %}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <small class="text-muted">{{ metric_meta.description }}</small>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+</div>
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">🔥 Когортное удержание</h5>
+                <div style="overflow-x: auto;">
+                    <table class="table table-bordered table-sm text-center" style="min-width: 300px;">
+                        <thead><tr><th>Месяц</th>{% for col in data.cohort.columns %}<th>{{ col }} мес</th>{% endfor %}</tr></thead>
+                        <tbody>
+                            {% for i, month in enumerate(data.cohort.index) %}
+                            <tr>
+                                <td><strong>{{ month }}</strong></td>
+                                {% for col in data.cohort.columns %}
+                                    {% set value = data.cohort.data[i][loop.index0] %}
+                                    <td style="background-color: {% if value >= 80 %}#27ae60{% elif value >= 50 %}#f1c40f{% elif value > 0 %}#e67e22{% else %}#ecf0f1{% endif %}; color: {% if value >= 50 %}white{% else %}black{% endif %};">{{ "%.1f"|format(value) if value > 0 else '-' }}%</td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">⚠️ Клиенты в зоне риска</h5>
+                {% if data.risky_clients %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead><tr><th>ID</th><th>Выручка</th><th>Активность</th><th>Риск</th><th>Причины</th></tr></thead>
+                            <tbody>
+                                {% for client in data.risky_clients %}
+                                <tr>
+                                    <td>#{{ client.user_id }}</td>
+                                    <td>${{ "%.2f"|format(client.revenue) }}</td>
+                                    <td>{{ client.last_activity }}</td>
+                                    <td><span class="{% if client.risk_score >= 70 %}text-danger{% elif client.risk_score >= 40 %}text-warning{% else %}text-success{% endif %}">{{ client.risk_score }}%</span></td>
+                                    <td>{% for reason in client.reasons %}<span class="badge bg-danger">{{ reason }}</span> {% endfor %}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-success"><i class="bi bi-check-circle"></i> Отлично! Клиенты в зоне риска не найдены.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
