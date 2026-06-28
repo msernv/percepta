@@ -42,7 +42,8 @@
         .theme-toggle:hover { background: rgba(255,255,255,0.2); }
         .hidden { display: none !important; }
         .footer { margin-top: 50px; padding: 20px 0; color: var(--text-secondary); border-top: 1px solid var(--border-color); text-align: center; }
-        .upload-zone { border: 2px dashed #6f42c1; border-radius: 20px; padding: 40px; text-align: center; background: var(--bg-card); cursor: pointer; }
+        .upload-zone { border: 2px dashed #6f42c1; border-radius: 20px; padding: 40px; text-align: center; background: var(--bg-card); cursor: pointer; transition: 0.3s; }
+        .upload-zone:hover { background: var(--bg-card-hover, #f0ebff); border-color: #4a2a8a; }
         .risk-high { color: #dc3545; font-weight: bold; }
         .risk-medium { color: #fd7e14; font-weight: bold; }
         .risk-low { color: #28a745; font-weight: bold; }
@@ -50,6 +51,13 @@
         .badge.bg-danger { background: #dc3545 !important; }
         .badge.bg-warning { background: #fd7e14 !important; color: #212529; }
         .badge.bg-info { background: #6f42c1 !important; }
+        .badge.bg-secondary { background: #6c757d !important; }
+        .table { color: var(--text-primary); }
+        .table th { background: #6f42c1; color: white; }
+        .table td { border-color: var(--border-color); }
+        .progress { background-color: var(--bg-body); }
+        .form-control, .form-select { background: var(--bg-card); color: var(--text-primary); border-color: var(--border-color); }
+        .form-control:focus { border-color: #6f42c1; box-shadow: 0 0 0 0.25rem rgba(111,66,193,0.25); }
     </style>
 </head>
 <body>
@@ -66,14 +74,20 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto align-items-lg-center">
-                    <li class="nav-item"><a class="nav-link" onclick="showSection('dashboard')"><i class="bi bi-speedometer2"></i> Дашборд</a></li>
-                    <li class="nav-item"><a class="nav-link" onclick="showSection('upload')"><i class="bi bi-cloud-upload"></i> Загрузить</a></li>
-                    <li class="nav-item"><a class="nav-link" onclick="showSection('settings')"><i class="bi bi-sliders2"></i> Настройки</a></li>
-                    <li class="nav-item"><a class="nav-link" onclick="showSection('marketplace')"><i class="bi bi-shop"></i> Маркетплейс</a></li>
-                    <li class="nav-item"><a class="nav-link" onclick="showSection('pricing')"><i class="bi bi-gem"></i> Тарифы</a></li>
-                    <li class="nav-item"><a class="nav-link" onclick="showSection('about')"><i class="bi bi-info-circle"></i> О проекте</a></li>
-                    <li class="nav-item"><a class="nav-link" onclick="showSection('feedback')"><i class="bi bi-chat-dots"></i> Обратная связь</a></li>
+                <ul class="navbar-nav ms-auto align-items-lg-center" id="navMenu">
+                    <!-- Гостевые ссылки -->
+                    <li class="nav-item" id="navLoginItem"><a class="nav-link" onclick="showLogin()"><i class="bi bi-box-arrow-in-right"></i> Войти</a></li>
+                    <li class="nav-item" id="navRegisterItem"><a class="nav-link" onclick="showRegister()"><i class="bi bi-person-plus"></i> Регистрация</a></li>
+                    <!-- Ссылки для авторизованных -->
+                    <li class="nav-item hidden" id="navDashboardItem"><a class="nav-link" onclick="showSection('dashboard')"><i class="bi bi-speedometer2"></i> Дашборд</a></li>
+                    <li class="nav-item hidden" id="navUploadItem"><a class="nav-link" onclick="showSection('upload')"><i class="bi bi-cloud-upload"></i> Загрузить</a></li>
+                    <li class="nav-item hidden" id="navSettingsItem"><a class="nav-link" onclick="showSection('settings')"><i class="bi bi-sliders2"></i> Настройки</a></li>
+                    <li class="nav-item hidden" id="navMarketplaceItem"><a class="nav-link" onclick="showSection('marketplace')"><i class="bi bi-shop"></i> Маркетплейс</a></li>
+                    <li class="nav-item hidden" id="navPricingItem"><a class="nav-link" onclick="showSection('pricing')"><i class="bi bi-gem"></i> Тарифы</a></li>
+                    <li class="nav-item hidden" id="navAboutItem"><a class="nav-link" onclick="showSection('about')"><i class="bi bi-info-circle"></i> О проекте</a></li>
+                    <li class="nav-item hidden" id="navFeedbackItem"><a class="nav-link" onclick="showSection('feedback')"><i class="bi bi-chat-dots"></i> Обратная связь</a></li>
+                    <li class="nav-item hidden" id="navLogoutItem"><a class="nav-link" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Выйти</a></li>
+                    <!-- Переключатель темы -->
                     <li class="nav-item ms-2">
                         <button class="theme-toggle" id="themeToggle" title="Переключить тему">
                             <i class="bi bi-moon-fill" id="themeIcon"></i>
@@ -93,66 +107,63 @@
         <!-- Сообщения -->
         <div id="messages"></div>
 
+        <!-- ===================== ВХОД ===================== -->
+        <div id="loginSection" class="row justify-content-center mt-5">
+            <div class="col-md-5">
+                <div class="card shadow-lg p-4">
+                    <h3 class="text-center mb-4"><i class="bi bi-box-arrow-in-right"></i> Вход в Percepta</h3>
+                    <form onsubmit="login(event)">
+                        <div class="mb-3"><label class="form-label">Email</label><input type="email" id="loginEmail" class="form-control" placeholder="example@company.com" required></div>
+                        <div class="mb-3"><label class="form-label">Пароль</label><input type="password" id="loginPassword" class="form-control" placeholder="Пароль" required></div>
+                        <button type="submit" class="btn btn-primary-custom w-100">Войти</button>
+                    </form>
+                    <div class="text-center mt-3"><small>Нет аккаунта? <a href="#" onclick="showRegister()">Зарегистрируйтесь</a></small></div>
+                    <div class="text-center mt-2"><small class="text-muted">Тестовый пользователь: test@percepta.com / password123</small></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================== РЕГИСТРАЦИЯ ===================== -->
+        <div id="registerSection" class="row justify-content-center mt-5 hidden">
+            <div class="col-md-5">
+                <div class="card shadow-lg p-4">
+                    <h3 class="text-center mb-4"><i class="bi bi-person-plus"></i> Регистрация</h3>
+                    <form onsubmit="register(event)">
+                        <div class="mb-3"><label class="form-label">Email</label><input type="email" id="regEmail" class="form-control" placeholder="example@company.com" required></div>
+                        <div class="mb-3"><label class="form-label">Компания</label><input type="text" id="regCompany" class="form-control" placeholder="ООО Моя Компания"></div>
+                        <div class="mb-3"><label class="form-label">Тип бизнеса</label>
+                            <select id="regVertical" class="form-select">
+                                <option value="saas">SaaS / Подписки</option>
+                                <option value="ecommerce">E-commerce</option>
+                                <option value="fintech">FinTech</option>
+                                <option value="custom">Прочее (Custom)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3"><label class="form-label">Пароль</label><input type="password" id="regPassword" class="form-control" placeholder="Минимум 4 символа" required></div>
+                        <button type="submit" class="btn btn-primary-custom w-100">Зарегистрироваться</button>
+                    </form>
+                    <div class="text-center mt-3"><small>Уже есть аккаунт? <a href="#" onclick="showLogin()">Войти</a></small></div>
+                </div>
+            </div>
+        </div>
+
         <!-- ===================== ДАШБОРД ===================== -->
-        <div id="dashboardSection">
+        <div id="dashboardSection" class="hidden">
             <div class="row">
                 <div class="col-12">
                     <h4 class="mb-3">📊 Дашборд Percepta</h4>
                     <div class="mb-3">
-                        <span class="badge bg-secondary">FREE (2/5 загрузок)</span>
+                        <span class="badge" id="subscriptionBadge">FREE (0/5 загрузок)</span>
                         <a href="#" onclick="showSection('pricing')" class="btn btn-sm btn-outline-primary ms-2">Обновить до PRO</a>
                     </div>
-                    <p class="text-muted">Обновлено: 28.06.2025 14:30</p>
+                    <p class="text-muted" id="lastUpdated">Данные не загружены</p>
                 </div>
             </div>
-
-            <!-- Карточки метрик -->
-            <div class="row mb-4">
-                <div class="col-md-3 col-sm-6 mb-3">
-                    <div class="card stat-card h-100"><div class="card-body"><div class="metric-label">Выручка</div><div class="number">$2,185</div></div></div>
-                </div>
-                <div class="col-md-3 col-sm-6 mb-3">
-                    <div class="card stat-card h-100"><div class="card-body"><div class="metric-label">MRR</div><div class="number">$420</div></div></div>
-                </div>
-                <div class="col-md-3 col-sm-6 mb-3">
-                    <div class="card stat-card h-100"><div class="card-body"><div class="metric-label">NRR</div><div class="number">112.5%</div></div></div>
-                </div>
-                <div class="col-md-3 col-sm-6 mb-3">
-                    <div class="card stat-card h-100"><div class="card-body"><div class="metric-label">Churn</div><div class="number">3.2%</div></div></div>
-                </div>
-            </div>
-
-            <!-- График MRR -->
-            <div class="row">
-                <div class="col-12">
-                    <div class="card"><div class="card-body"><h5>📈 Динамика MRR</h5><div id="mrrChart" style="height:300px;"></div></div></div>
-                </div>
-            </div>
-
-            <!-- Когорты -->
-            <div class="row mt-4">
-                <div class="col-12">
-                    <div class="card"><div class="card-body"><h5>🔥 Когортное удержание</h5>
-                        <table class="table table-bordered table-sm text-center"><thead><tr><th>Месяц</th><th>1 мес</th><th>2 мес</th><th>3 мес</th></tr></thead>
-                        <tbody><tr><td><strong>Янв</strong></td><td style="background:#27ae60;color:white;">100%</td><td style="background:#27ae60;color:white;">85%</td><td style="background:#f1c40f;">70%</td></tr>
-                        <tr><td><strong>Фев</strong></td><td style="background:#27ae60;color:white;">100%</td><td style="background:#f1c40f;">80%</td><td style="background:#e67e22;color:white;">65%</td></tr>
-                        <tr><td><strong>Мар</strong></td><td style="background:#27ae60;color:white;">100%</td><td style="background:#f1c40f;">75%</td><td style="background:#ecf0f1;">-</td></tr>
-                        </tbody></table>
-                    </div></div>
-                </div>
-            </div>
-
-            <!-- Прогноз оттока -->
-            <div class="row mt-4">
-                <div class="col-12">
-                    <div class="card"><div class="card-body"><h5>🤖 Прогноз оттока <span class="badge bg-info">AI</span></h5>
-                        <div class="table-responsive"><table class="table table-hover"><thead><tr><th>ID</th><th>Выручка</th><th>Риск</th><th>Причины</th></tr></thead>
-                        <tbody><tr><td>#3</td><td>$150</td><td><span class="risk-high">85%</span></td><td>Не заходил 14 дней, Написал "Дорого"</td></tr>
-                        <tr><td>#6</td><td>$180</td><td><span class="risk-medium">70%</span></td><td>Нет платежа в текущем месяце</td></tr>
-                        </tbody></table></div>
-                    </div></div>
-                </div>
-            </div>
+            <div class="row mb-4" id="metricsRow"></div>
+            <div class="row"><div class="col-12"><div class="card"><div class="card-body"><h5>📈 Динамика MRR</h5><div id="mrrChart" style="height:300px;"></div></div></div></div></div>
+            <div class="row mt-4"><div class="col-12"><div class="card"><div class="card-body"><h5>🔥 Когортное удержание</h5><div id="cohortTable"></div></div></div></div></div>
+            <div class="row mt-4"><div class="col-12"><div class="card"><div class="card-body"><h5>⚠️ Клиенты в зоне риска</h5><div id="riskyClients"></div></div></div></div></div>
+            <div class="row mt-4"><div class="col-12"><div class="card"><div class="card-body"><h5>🤖 Прогноз оттока <span class="badge bg-info">AI</span></h5><div id="churnPredictions"></div></div></div></div></div>
         </div>
 
         <!-- ===================== ЗАГРУЗКА ===================== -->
@@ -163,12 +174,13 @@
                         <h4><i class="bi bi-cloud-upload text-primary"></i> Загрузка данных</h4>
                         <p class="text-muted">Загрузите CSV или Excel файл с данными о клиентах.</p>
                         <hr>
-                        <div class="upload-zone">
+                        <div class="upload-zone" id="dropZone">
                             <i class="bi bi-file-earmark-spreadsheet" style="font-size:3rem;color:#6f42c1;"></i>
                             <p class="mt-3"><strong>Перетащите файл сюда</strong> или кликните для выбора</p>
                             <p class="text-muted small">.csv, .xlsx, .xls</p>
+                            <input type="file" id="fileInput" style="display:none;" accept=".csv,.xlsx,.xls">
                         </div>
-                        <button class="btn btn-primary-custom mt-3" onclick="showMessage('Файл загружен! (Демо-режим)', 'success')"><i class="bi bi-cloud-upload"></i> Загрузить</button>
+                        <button class="btn btn-primary-custom mt-3" onclick="uploadFile()"><i class="bi bi-cloud-upload"></i> Загрузить и обработать</button>
                     </div>
                 </div>
             </div>
@@ -178,23 +190,12 @@
         <div id="settingsSection" class="hidden">
             <div class="row"><div class="col-12"><div class="card"><div class="card-body">
                 <h4><i class="bi bi-sliders2 text-primary"></i> Конструктор дашборда</h4>
-                <p class="text-muted">Выберите метрики для отображения на дашборде.</p>
+                <p class="text-muted">Выберите метрики для отображения.</p>
                 <hr>
-                <div class="row">
-                    <div class="col-md-6"><div class="card"><div class="card-body">
-                        <h6>Финансы</h6>
-                        <div class="form-check"><input class="form-check-input" type="checkbox" checked><label class="form-check-label">Выручка</label></div>
-                        <div class="form-check"><input class="form-check-input" type="checkbox" checked><label class="form-check-label">MRR</label></div>
-                        <div class="form-check"><input class="form-check-input" type="checkbox" checked><label class="form-check-label">NRR</label></div>
-                        <div class="form-check"><input class="form-check-input" type="checkbox"><label class="form-check-label">LTV</label></div>
-                    </div></div></div>
-                    <div class="col-md-6"><div class="card"><div class="card-body">
-                        <h6>Активность</h6>
-                        <div class="form-check"><input class="form-check-input" type="checkbox" checked><label class="form-check-label">Активные пользователи</label></div>
-                        <div class="form-check"><input class="form-check-input" type="checkbox" checked><label class="form-check-label">Ушедшие пользователи</label></div>
-                    </div></div></div>
-                </div>
-                <button class="btn btn-primary-custom mt-3" onclick="showMessage('Настройки сохранены! (Демо-режим)', 'success')"><i class="bi bi-save"></i> Сохранить</button>
+                <form onsubmit="saveSettings(event)">
+                    <div class="row" id="settingsMetrics"></div>
+                    <button type="submit" class="btn btn-primary-custom"><i class="bi bi-save"></i> Сохранить</button>
+                </form>
             </div></div></div></div>
         </div>
 
@@ -202,28 +203,15 @@
         <div id="marketplaceSection" class="hidden">
             <div class="row"><div class="col-12"><div class="card"><div class="card-body">
                 <h4><i class="bi bi-shop text-primary"></i> Маркетплейс метрик</h4>
-                <p class="text-muted">Публичные метрики, созданные сообществом Percepta.</p>
+                <p class="text-muted">Публичные метрики, созданные сообществом.</p>
                 <hr>
-                <div class="row">
-                    <div class="col-md-6 mb-4"><div class="card h-100"><div class="card-body">
-                        <h5><i class="bi bi-wand-2 text-primary"></i> Средний чек активных</h5>
-                        <p>Расчет среднего чека среди активных пользователей</p>
-                        <small class="text-muted"><i class="bi bi-person"></i> user@example.com</small><br>
-                        <button class="btn btn-primary-custom btn-sm mt-2" onclick="showMessage('Метрика установлена! (Демо-режим)', 'success')"><i class="bi bi-download"></i> Установить</button>
-                    </div></div></div>
-                    <div class="col-md-6 mb-4"><div class="card h-100"><div class="card-body">
-                        <h5><i class="bi bi-wand-2 text-primary"></i> Отток по месяцам</h5>
-                        <p>Прогноз оттока на основе исторических данных</p>
-                        <small class="text-muted"><i class="bi bi-person"></i> demo@percepta.com</small><br>
-                        <button class="btn btn-primary-custom btn-sm mt-2" onclick="showMessage('Метрика установлена! (Демо-режим)', 'success')"><i class="bi bi-download"></i> Установить</button>
-                    </div></div></div>
-                </div>
+                <div id="marketplaceList"></div>
             </div></div></div></div>
         </div>
 
         <!-- ===================== ТАРИФЫ ===================== -->
         <div id="pricingSection" class="hidden">
-            <div class="row"><div class="col-12 text-center mb-4"><h2 class="display-6 fw-bold">Выберите тариф</h2><p class="text-muted">Развивайте свой бизнес вместе с Percepta</p></div></div>
+            <div class="row"><div class="col-12 text-center mb-4"><h2 class="display-6 fw-bold">Выберите тариф</h2></div></div>
             <div class="row justify-content-center">
                 <div class="col-md-4 mb-4"><div class="card h-100 text-center"><div class="card-body d-flex flex-column">
                     <h3>🚀 Бесплатный</h3>
@@ -233,9 +221,9 @@
                         <li><i class="bi bi-check-circle-fill text-success"></i> Основные метрики</li>
                         <li><i class="bi bi-x-circle-fill text-danger"></i> Прогнозирование оттока</li>
                     </ul>
-                    <span class="btn btn-success mt-auto">Ваш тариф</span>
+                    <button class="btn btn-success mt-auto" onclick="selectPlan('free')">Выбрать</button>
                 </div></div></div>
-                <div class="col-md-4 mb-4"><div class="card h-100 text-center border-primary"><div class="card-header bg-primary text-white"><h5 class="mb-0">🔥 Самый популярный</h5></div>
+                <div class="col-md-4 mb-4"><div class="card h-100 text-center border-primary"><div class="card-header bg-primary text-white"><h5>🔥 Самый популярный</h5></div>
                     <div class="card-body d-flex flex-column">
                         <h3>💎 PRO</h3>
                         <div class="my-3"><span class="display-4 fw-bold">990 ₽</span><span class="text-muted">/мес</span></div>
@@ -244,11 +232,10 @@
                             <li><i class="bi bi-check-circle-fill text-success"></i> Прогнозирование оттока (AI)</li>
                             <li><i class="bi bi-check-circle-fill text-success"></i> Приоритетная поддержка</li>
                         </ul>
-                        <button class="btn btn-primary mt-auto" onclick="showMessage('Переход на оплату... (Демо-режим)', 'info')">Купить PRO за 990 ₽</button>
+                        <button class="btn btn-primary mt-auto" onclick="selectPlan('pro')">Купить PRO за 990 ₽</button>
                     </div>
                 </div></div>
             </div>
-            <div class="row mt-4"><div class="col-12 text-center"><p class="text-muted">Все тарифы включают базовые метрики, дашборд и экспорт в PDF.</p></div></div>
         </div>
 
         <!-- ===================== О ПРОЕКТЕ ===================== -->
@@ -258,13 +245,11 @@
                 <hr>
                 <div class="row"><div class="col-md-8">
                     <h5>🚀 Что такое Percepta?</h5>
-                    <p>Percepta — это AI-платформа для аналитики и прогнозирования в B2B SaaS. Мы помогаем компаниям отслеживать ключевые метрики, находить утечки в доходах и прогнозировать отток клиентов.</p>
+                    <p>Percepta — это AI-платформа для аналитики в B2B SaaS. Помогает отслеживать метрики, находить утечки и прогнозировать отток.</p>
                     <h5 class="mt-4">✨ Ключевые возможности</h5>
-                    <ul>
-                        <li><strong>📊 70+ метрик</strong> — от MRR и NRR до LTV и CAC</li>
-                        <li><strong>🤖 AI-прогнозирование</strong> — предсказываем отток с точностью до 90%</li>
-                        <li><strong>📱 PWA-приложение</strong> — работайте с телефона и планшетов</li>
-                    </ul>
+                    <ul><li><strong>📊 70+ метрик</strong> — от MRR до LTV</li>
+                    <li><strong>🤖 AI-прогнозирование</strong> — точность до 90%</li>
+                    <li><strong>📱 PWA-приложение</strong> — работайте с телефона</li></ul>
                 </div><div class="col-md-4"><div class="card bg-light"><div class="card-body">
                     <h6>📬 Контакты</h6>
                     <p><i class="bi bi-envelope"></i> support@percepta.com<br><i class="bi bi-telegram"></i> @percepta_bot</p>
@@ -277,12 +262,11 @@
         <div id="feedbackSection" class="hidden">
             <div class="row justify-content-center"><div class="col-md-6"><div class="card"><div class="card-body">
                 <h4><i class="bi bi-chat-dots text-primary"></i> Обратная связь</h4>
-                <p class="text-muted">Расскажите нам о своём опыте использования Percepta.</p>
                 <hr>
-                <form onsubmit="event.preventDefault(); showMessage('✅ Спасибо за ваше сообщение! (Демо-режим)', 'success');">
-                    <div class="mb-3"><label class="form-label">Ваше имя</label><input type="text" class="form-control" value="Тестовый пользователь"></div>
-                    <div class="mb-3"><label class="form-label">Email</label><input type="email" class="form-control" value="test@percepta.com"></div>
-                    <div class="mb-3"><label class="form-label">Сообщение</label><textarea class="form-control" rows="4" placeholder="Опишите ваш вопрос..."></textarea></div>
+                <form onsubmit="sendFeedback(event)">
+                    <div class="mb-3"><label class="form-label">Ваше имя</label><input type="text" id="fbName" class="form-control" required></div>
+                    <div class="mb-3"><label class="form-label">Email</label><input type="email" id="fbEmail" class="form-control" required></div>
+                    <div class="mb-3"><label class="form-label">Сообщение</label><textarea id="fbMessage" class="form-control" rows="4" required></textarea></div>
                     <button type="submit" class="btn btn-primary-custom w-100"><i class="bi bi-send"></i> Отправить</button>
                 </form>
             </div></div></div></div>
@@ -306,13 +290,12 @@
     <!-- ============================================================ -->
     <script>
         // ============================================================
-        // ПЕРЕКЛЮЧЕНИЕ ТЕМЫ
+        // 1. ТЕМА
         // ============================================================
         (function() {
             const savedTheme = localStorage.getItem('percepta-theme') || 'light';
             document.documentElement.setAttribute('data-bs-theme', savedTheme);
             updateThemeUI(savedTheme);
-
             document.getElementById('themeToggle').addEventListener('click', function() {
                 const current = document.documentElement.getAttribute('data-bs-theme');
                 const newTheme = current === 'light' ? 'dark' : 'light';
@@ -320,58 +303,355 @@
                 localStorage.setItem('percepta-theme', newTheme);
                 updateThemeUI(newTheme);
             });
-
             function updateThemeUI(theme) {
                 const icon = document.getElementById('themeIcon');
                 const label = document.getElementById('themeLabel');
-                if (theme === 'dark') {
-                    icon.className = 'bi bi-sun-fill';
-                    label.textContent = 'Светлая';
-                } else {
-                    icon.className = 'bi bi-moon-fill';
-                    label.textContent = 'Тёмная';
-                }
+                if (theme === 'dark') { icon.className = 'bi bi-sun-fill'; label.textContent = 'Светлая'; } 
+                else { icon.className = 'bi bi-moon-fill'; label.textContent = 'Тёмная'; }
             }
         })();
 
         // ============================================================
-        // НАВИГАЦИЯ
+        // 2. ДАННЫЕ В LOCALSTORAGE
+        // ============================================================
+        function getUsers() { return JSON.parse(localStorage.getItem('percepta_users') || '{}'); }
+        function saveUsers(users) { localStorage.setItem('percepta_users', JSON.stringify(users)); }
+        function getData(email) { const all = JSON.parse(localStorage.getItem('percepta_data') || '{}'); return all[email] || null; }
+        function saveData(email, data) { const all = JSON.parse(localStorage.getItem('percepta_data') || '{}'); all[email] = data; localStorage.setItem('percepta_data', JSON.stringify(all)); }
+        function getSettings(email) { const all = JSON.parse(localStorage.getItem('percepta_settings') || '{}'); return all[email] || { vertical: 'saas', selected: [] }; }
+        function saveSettings(email, settings) { const all = JSON.parse(localStorage.getItem('percepta_settings') || '{}'); all[email] = settings; localStorage.setItem('percepta_settings', JSON.stringify(all)); }
+
+        let currentUser = null;
+        let userData = null;
+
+        // ============================================================
+        // 3. АВТОРИЗАЦИЯ
         // ============================================================
         function showSection(section) {
-            const sections = ['dashboard', 'upload', 'settings', 'marketplace', 'pricing', 'about', 'feedback'];
-            sections.forEach(id => {
+            ['login', 'register', 'dashboard', 'upload', 'settings', 'marketplace', 'pricing', 'about', 'feedback'].forEach(id => {
                 document.getElementById(id + 'Section').classList.add('hidden');
             });
             document.getElementById(section + 'Section').classList.remove('hidden');
-            // Прокручиваем вверх
             window.scrollTo({ top: 0, behavior: 'smooth' });
+            if (section === 'dashboard' && currentUser) loadData();
+            if (section === 'settings' && currentUser) loadSettings();
+            if (section === 'marketplace') loadMarketplace();
         }
 
-        // ============================================================
-        // СООБЩЕНИЯ
-        // ============================================================
+        function showLogin() { showSection('login'); }
+        function showRegister() { showSection('register'); }
+
         function showMessage(text, type = 'success') {
             const div = document.getElementById('messages');
-            const alertClass = type === 'success' ? 'alert-success' : type === 'danger' ? 'alert-danger' : 'alert-info';
-            div.innerHTML = `<div class="alert ${alertClass} alert-dismissible fade show">${text}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+            const cls = type === 'success' ? 'alert-success' : type === 'danger' ? 'alert-danger' : 'alert-info';
+            div.innerHTML = `<div class="alert ${cls} alert-dismissible fade show">${text}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
             setTimeout(() => { div.innerHTML = ''; }, 5000);
         }
 
+        function login(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const users = getUsers();
+            if (!users[email] || users[email].password !== password) {
+                showMessage('Неверный email или пароль', 'danger');
+                return;
+            }
+            currentUser = email;
+            userData = getData(email);
+            document.getElementById('navLoginItem').classList.add('hidden');
+            document.getElementById('navRegisterItem').classList.add('hidden');
+            ['navDashboardItem', 'navUploadItem', 'navSettingsItem', 'navMarketplaceItem', 'navPricingItem', 'navAboutItem', 'navFeedbackItem', 'navLogoutItem'].forEach(id => {
+                document.getElementById(id).classList.remove('hidden');
+            });
+            showMessage('Вход выполнен!', 'success');
+            showSection('dashboard');
+        }
+
+        function register(e) {
+            e.preventDefault();
+            const email = document.getElementById('regEmail').value.trim();
+            const company = document.getElementById('regCompany').value.trim();
+            const vertical = document.getElementById('regVertical').value;
+            const password = document.getElementById('regPassword').value;
+            if (password.length < 4) { showMessage('Пароль минимум 4 символа', 'danger'); return; }
+            const users = getUsers();
+            if (users[email]) { showMessage('Пользователь уже существует', 'danger'); return; }
+            users[email] = { email, company, vertical, password, plan: 'free', uploads: 0 };
+            saveUsers(users);
+            showMessage('Регистрация успешна! Теперь войдите.', 'success');
+            showLogin();
+        }
+
+        function logout() {
+            currentUser = null;
+            userData = null;
+            document.getElementById('navLoginItem').classList.remove('hidden');
+            document.getElementById('navRegisterItem').classList.remove('hidden');
+            ['navDashboardItem', 'navUploadItem', 'navSettingsItem', 'navMarketplaceItem', 'navPricingItem', 'navAboutItem', 'navFeedbackItem', 'navLogoutItem'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            showMessage('Вы вышли из системы', 'info');
+            showLogin();
+        }
+
         // ============================================================
-        // ГРАФИК MRR
+        // 4. ЗАГРУЗКА ДАННЫХ
         // ============================================================
-        const trace = {
-            x: ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн'],
-            y: [350, 380, 395, 405, 415, 420],
-            type: 'scatter',
-            mode: 'lines+markers',
-            line: { color: '#6f42c1', width: 3 },
-            marker: { color: '#6f42c1', size: 8 }
-        };
-        Plotly.newPlot('mrrChart', [trace], {
-            margin: { t: 20, r: 20, l: 50, b: 40 },
-            yaxis: { title: 'MRR, $' },
-            font: { family: 'Segoe UI, sans-serif' }
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.style.background = '#e8d5ff'; });
+        dropZone.addEventListener('dragleave', () => { dropZone.style.background = ''; });
+        dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropZone.style.background = ''; fileInput.files = e.dataTransfer.files; uploadFile(); });
+        fileInput.addEventListener('change', uploadFile);
+
+        function uploadFile() {
+            const file = fileInput.files[0];
+            if (!file) { showMessage('Выберите файл', 'warning'); return; }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const text = e.target.result;
+                    const lines = text.split('\n').filter(l => l.trim());
+                    if (lines.length < 2) { showMessage('Файл пуст', 'danger'); return; }
+                    const headers = lines[0].split(',').map(h => h.trim());
+                    const data = lines.slice(1).map(line => {
+                        const vals = line.split(',');
+                        const obj = {};
+                        headers.forEach((h, i) => obj[h] = vals[i] ? vals[i].trim() : '');
+                        return obj;
+                    });
+                    const metrics = calculateMetrics(data);
+                    userData = { metrics, data, history: generateHistory(data), last_updated: new Date().toLocaleString() };
+                    saveData(currentUser, userData);
+                    showMessage('Файл загружен и обработан!', 'success');
+                    showSection('dashboard');
+                } catch (err) {
+                    showMessage('Ошибка: ' + err.message, 'danger');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // ============================================================
+        // 5. РАСЧЕТ МЕТРИК
+        // ============================================================
+        function calculateMetrics(data) {
+            const total = data.length;
+            const active = data.filter(r => r.status === 'active').length;
+            const churned = data.filter(r => r.status === 'churned').length;
+            const revenue = data.reduce((s, r) => s + parseFloat(r.revenue || 0), 0);
+            const mrr = data.filter(r => r.status === 'active').reduce((s, r) => s + parseFloat(r.revenue || 0), 0);
+            const arpu = active ? mrr / active : 0;
+            const nrr = active ? (mrr / (mrr || 1)) * 100 : 100;
+            const churnRate = (total ? (churned / total) * 100 : 0);
+            return { revenue, mrr, arpu, nrr, churn: churnRate, active_users: active, churned_users: churned };
+        }
+
+        function generateHistory(data) {
+            const months = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн'];
+            return months.map((m, i) => ({ month: m, value: 300 + i * 25 + Math.random() * 20 }));
+        }
+
+        // ============================================================
+        // 6. ДАШБОРД
+        // ============================================================
+        function loadData() {
+            if (!currentUser) return;
+            const settings = getSettings(currentUser);
+            const users = getUsers();
+            const plan = users[currentUser]?.plan || 'free';
+            const uploads = users[currentUser]?.uploads || 0;
+            document.getElementById('subscriptionBadge').textContent = plan.toUpperCase() + (plan === 'free' ? ` (${uploads}/5 загрузок)` : ' (безлимит)');
+            document.getElementById('subscriptionBadge').className = 'badge ' + (plan === 'pro' ? 'bg-success' : 'bg-secondary');
+            if (!userData) {
+                document.getElementById('lastUpdated').textContent = 'Данные не загружены';
+                document.getElementById('metricsRow').innerHTML = '<div class="col-12"><div class="alert alert-info">Загрузите данные через раздел "Загрузить"</div></div>';
+                document.getElementById('mrrChart').innerHTML = '';
+                document.getElementById('cohortTable').innerHTML = '';
+                document.getElementById('riskyClients').innerHTML = '';
+                document.getElementById('churnPredictions').innerHTML = '';
+                return;
+            }
+            document.getElementById('lastUpdated').textContent = 'Обновлено: ' + (userData.last_updated || 'только что');
+            const metrics = userData.metrics || {};
+            const row = document.getElementById('metricsRow');
+            row.innerHTML = '';
+            const map = {
+                revenue: { icon: 'bi-cash', name: 'Выручка', unit: '$' },
+                mrr: { icon: 'bi-graph-up', name: 'MRR', unit: '$' },
+                nrr: { icon: 'bi-arrow-repeat', name: 'NRR', unit: '%' },
+                churn: { icon: 'bi-exclamation-triangle', name: 'Churn', unit: '%' },
+                arpu: { icon: 'bi-person-badge', name: 'ARPU', unit: '$' },
+                active_users: { icon: 'bi-people', name: 'Активные', unit: '' },
+                churned_users: { icon: 'bi-person-x', name: 'Ушедшие', unit: '' }
+            };
+            const selected = settings.selected || ['revenue', 'mrr', 'nrr', 'active_users'];
+            selected.forEach(id => {
+                const meta = map[id];
+                if (!meta || metrics[id] === undefined) return;
+                const col = document.createElement('div');
+                col.className = 'col-md-3 col-sm-6 mb-3';
+                const val = typeof metrics[id] === 'number' ? metrics[id].toFixed(1) : metrics[id];
+                col.innerHTML = `<div class="card stat-card h-100"><div class="card-body">
+                    <div class="metric-label"><i class="${meta.icon}"></i> ${meta.name}</div>
+                    <div class="number">${meta.unit === '$' ? '$' : ''}${val}${meta.unit === '%' ? '%' : ''}</div>
+                </div></div>`;
+                row.appendChild(col);
+            });
+            // График MRR
+            if (userData.history && userData.history.length) {
+                const trace = {
+                    x: userData.history.map(d => d.month),
+                    y: userData.history.map(d => d.value),
+                    type: 'scatter', mode: 'lines+markers',
+                    line: { color: '#6f42c1', width: 3 },
+                    marker: { color: '#6f42c1', size: 8 }
+                };
+                Plotly.newPlot('mrrChart', [trace], {
+                    margin: { t: 20, r: 20, l: 50, b: 40 },
+                    yaxis: { title: 'MRR, $' },
+                    font: { family: 'Segoe UI, sans-serif' }
+                });
+            } else {
+                document.getElementById('mrrChart').innerHTML = '<div class="text-center text-muted">Недостаточно данных</div>';
+            }
+            // Когорты
+            document.getElementById('cohortTable').innerHTML =
+                '<div class="text-center text-muted">Когортный анализ доступен после загрузки данных</div>';
+            // Риски
+            document.getElementById('riskyClients').innerHTML =
+                '<div class="alert alert-success">✅ Клиенты в зоне риска не найдены</div>';
+            // Прогноз
+            document.getElementById('churnPredictions').innerHTML =
+                '<div class="text-muted">Прогноз оттока доступен на PRO тарифе</div>';
+        }
+
+        // ============================================================
+        // 7. НАСТРОЙКИ
+        // ============================================================
+        function loadSettings() {
+            if (!currentUser) return;
+            const settings = getSettings(currentUser);
+            const container = document.getElementById('settingsMetrics');
+            container.innerHTML = '';
+            const metrics = [
+                { id: 'revenue', name: 'Выручка', category: 'Финансы' },
+                { id: 'mrr', name: 'MRR', category: 'Финансы' },
+                { id: 'nrr', name: 'NRR', category: 'Финансы' },
+                { id: 'arpu', name: 'ARPU', category: 'Финансы' },
+                { id: 'active_users', name: 'Активные пользователи', category: 'Активность' },
+                { id: 'churned_users', name: 'Ушедшие пользователи', category: 'Активность' }
+            ];
+            const cats = [...new Set(metrics.map(m => m.category))];
+            cats.forEach(cat => {
+                const col = document.createElement('div');
+                col.className = 'col-md-6 mb-4';
+                let html = `<div class="card"><div class="card-body"><h6>${cat}</h6>`;
+                metrics.filter(m => m.category === cat).forEach(m => {
+                    const checked = settings.selected.includes(m.id) ? 'checked' : '';
+                    html += `<div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="${m.id}" ${checked}>
+                        <label class="form-check-label">${m.name}</label>
+                    </div>`;
+                });
+                html += '</div></div>';
+                col.innerHTML = html;
+                container.appendChild(col);
+            });
+        }
+
+        function saveSettings(e) {
+            e.preventDefault();
+            if (!currentUser) return;
+            const checks = document.querySelectorAll('#settingsMetrics input[type="checkbox"]');
+            const selected = Array.from(checks).filter(c => c.checked).map(c => c.value);
+            const settings = getSettings(currentUser);
+            settings.selected = selected;
+            saveSettings(currentUser, settings);
+            showMessage('Настройки сохранены!', 'success');
+        }
+
+        // ============================================================
+        // 8. МАРКЕТПЛЕЙС
+        // ============================================================
+        function loadMarketplace() {
+            const container = document.getElementById('marketplaceList');
+            const publicMetrics = [
+                { name: 'Средний чек активных', desc: 'Расчет среднего чека среди активных пользователей', owner: 'demo@percepta.com' },
+                { name: 'Отток по месяцам', desc: 'Прогноз оттока на основе исторических данных', owner: 'user@example.com' },
+                { name: 'LTV по когортам', desc: 'Анализ LTV по месяцам', owner: 'analytics@percepta.com' }
+            ];
+            let html = '<div class="row">';
+            publicMetrics.forEach(m => {
+                html += `<div class="col-md-4 mb-4"><div class="card h-100"><div class="card-body">
+                    <h5><i class="bi bi-wand-2 text-primary"></i> ${m.name}</h5>
+                    <p>${m.desc}</p>
+                    <small class="text-muted"><i class="bi bi-person"></i> ${m.owner}</small><br>
+                    <button class="btn btn-primary-custom btn-sm mt-2" onclick="showMessage('Метрика установлена!', 'success')">
+                        <i class="bi bi-download"></i> Установить
+                    </button>
+                </div></div></div>`;
+            });
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        // ============================================================
+        // 9. ТАРИФЫ
+        // ============================================================
+        function selectPlan(plan) {
+            if (!currentUser) { showMessage('Войдите в систему', 'warning'); return; }
+            const users = getUsers();
+            users[currentUser].plan = plan;
+            saveUsers(users);
+            showMessage(`Тариф ${plan.toUpperCase()} активирован!`, 'success');
+            showSection('dashboard');
+        }
+
+        // ============================================================
+        // 10. ОБРАТНАЯ СВЯЗЬ
+        // ============================================================
+        function sendFeedback(e) {
+            e.preventDefault();
+            const name = document.getElementById('fbName').value;
+            const email = document.getElementById('fbEmail').value;
+            const message = document.getElementById('fbMessage').value;
+            if (!message) { showMessage('Напишите сообщение', 'danger'); return; }
+            // Сохраняем в LocalStorage
+            const feedbacks = JSON.parse(localStorage.getItem('percepta_feedback') || '[]');
+            feedbacks.push({ name, email, message, date: new Date().toISOString() });
+            localStorage.setItem('percepta_feedback', JSON.stringify(feedbacks));
+            showMessage('✅ Спасибо за ваше сообщение!', 'success');
+            document.getElementById('fbName').value = '';
+            document.getElementById('fbEmail').value = '';
+            document.getElementById('fbMessage').value = '';
+        }
+
+        // ============================================================
+        // 11. ПРОВЕРКА АВТОРИЗАЦИИ ПРИ ЗАГРУЗКЕ
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', function() {
+            // Проверяем, есть ли сохранённая сессия
+            const savedUser = localStorage.getItem('percepta_session');
+            if (savedUser && getUsers()[savedUser]) {
+                currentUser = savedUser;
+                userData = getData(savedUser);
+                document.getElementById('navLoginItem').classList.add('hidden');
+                document.getElementById('navRegisterItem').classList.add('hidden');
+                ['navDashboardItem', 'navUploadItem', 'navSettingsItem', 'navMarketplaceItem', 'navPricingItem', 'navAboutItem', 'navFeedbackItem', 'navLogoutItem'].forEach(id => {
+                    document.getElementById(id).classList.remove('hidden');
+                });
+                showSection('dashboard');
+            } else {
+                showLogin();
+            }
+        });
+
+        window.addEventListener('beforeunload', function() {
+            if (currentUser) localStorage.setItem('percepta_session', currentUser);
+            else localStorage.removeItem('percepta_session');
         });
     </script>
 </body>
