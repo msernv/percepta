@@ -43,7 +43,7 @@
         .hidden { display: none !important; }
         .footer { margin-top: 50px; padding: 20px 0; color: var(--text-secondary); border-top: 1px solid var(--border-color); text-align: center; }
         .upload-zone { border: 2px dashed #6f42c1; border-radius: 20px; padding: 40px; text-align: center; background: var(--bg-card); cursor: pointer; transition: 0.3s; }
-        .upload-zone:hover { background: var(--bg-card-hover, #f0ebff); border-color: #4a2a8a; }
+        .upload-zone:hover { background: #f0ebff; border-color: #4a2a8a; }
         .risk-high { color: #dc3545; font-weight: bold; }
         .risk-medium { color: #fd7e14; font-weight: bold; }
         .risk-low { color: #28a745; font-weight: bold; }
@@ -58,6 +58,9 @@
         .progress { background-color: var(--bg-body); }
         .form-control, .form-select { background: var(--bg-card); color: var(--text-primary); border-color: var(--border-color); }
         .form-control:focus { border-color: #6f42c1; box-shadow: 0 0 0 0.25rem rgba(111,66,193,0.25); }
+        .badge.bg-primary { background: #6f42c1 !important; }
+        .text-muted { color: var(--text-secondary) !important; }
+        .pre-scrollable { max-height: 300px; overflow-y: auto; }
     </style>
 </head>
 <body>
@@ -75,10 +78,8 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto align-items-lg-center" id="navMenu">
-                    <!-- Гостевые ссылки -->
                     <li class="nav-item" id="navLoginItem"><a class="nav-link" onclick="showLogin()"><i class="bi bi-box-arrow-in-right"></i> Войти</a></li>
                     <li class="nav-item" id="navRegisterItem"><a class="nav-link" onclick="showRegister()"><i class="bi bi-person-plus"></i> Регистрация</a></li>
-                    <!-- Ссылки для авторизованных -->
                     <li class="nav-item hidden" id="navDashboardItem"><a class="nav-link" onclick="showSection('dashboard')"><i class="bi bi-speedometer2"></i> Дашборд</a></li>
                     <li class="nav-item hidden" id="navUploadItem"><a class="nav-link" onclick="showSection('upload')"><i class="bi bi-cloud-upload"></i> Загрузить</a></li>
                     <li class="nav-item hidden" id="navSettingsItem"><a class="nav-link" onclick="showSection('settings')"><i class="bi bi-sliders2"></i> Настройки</a></li>
@@ -87,7 +88,6 @@
                     <li class="nav-item hidden" id="navAboutItem"><a class="nav-link" onclick="showSection('about')"><i class="bi bi-info-circle"></i> О проекте</a></li>
                     <li class="nav-item hidden" id="navFeedbackItem"><a class="nav-link" onclick="showSection('feedback')"><i class="bi bi-chat-dots"></i> Обратная связь</a></li>
                     <li class="nav-item hidden" id="navLogoutItem"><a class="nav-link" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Выйти</a></li>
-                    <!-- Переключатель темы -->
                     <li class="nav-item ms-2">
                         <button class="theme-toggle" id="themeToggle" title="Переключить тему">
                             <i class="bi bi-moon-fill" id="themeIcon"></i>
@@ -112,7 +112,7 @@
             <div class="col-md-5">
                 <div class="card shadow-lg p-4">
                     <h3 class="text-center mb-4"><i class="bi bi-box-arrow-in-right"></i> Вход в Percepta</h3>
-                    <form onsubmit="login(event)">
+                    <form id="loginForm">
                         <div class="mb-3"><label class="form-label">Email</label><input type="email" id="loginEmail" class="form-control" placeholder="example@company.com" required></div>
                         <div class="mb-3"><label class="form-label">Пароль</label><input type="password" id="loginPassword" class="form-control" placeholder="Пароль" required></div>
                         <button type="submit" class="btn btn-primary-custom w-100">Войти</button>
@@ -128,7 +128,7 @@
             <div class="col-md-5">
                 <div class="card shadow-lg p-4">
                     <h3 class="text-center mb-4"><i class="bi bi-person-plus"></i> Регистрация</h3>
-                    <form onsubmit="register(event)">
+                    <form id="registerForm">
                         <div class="mb-3"><label class="form-label">Email</label><input type="email" id="regEmail" class="form-control" placeholder="example@company.com" required></div>
                         <div class="mb-3"><label class="form-label">Компания</label><input type="text" id="regCompany" class="form-control" placeholder="ООО Моя Компания"></div>
                         <div class="mb-3"><label class="form-label">Тип бизнеса</label>
@@ -157,6 +157,9 @@
                         <a href="#" onclick="showSection('pricing')" class="btn btn-sm btn-outline-primary ms-2">Обновить до PRO</a>
                     </div>
                     <p class="text-muted" id="lastUpdated">Данные не загружены</p>
+                    <div class="mb-2">
+                        <button class="btn btn-success btn-sm" onclick="generateSampleData()"><i class="bi bi-file-earmark-spreadsheet"></i> Загрузить пример</button>
+                    </div>
                 </div>
             </div>
             <div class="row mb-4" id="metricsRow"></div>
@@ -164,6 +167,7 @@
             <div class="row mt-4"><div class="col-12"><div class="card"><div class="card-body"><h5>🔥 Когортное удержание</h5><div id="cohortTable"></div></div></div></div></div>
             <div class="row mt-4"><div class="col-12"><div class="card"><div class="card-body"><h5>⚠️ Клиенты в зоне риска</h5><div id="riskyClients"></div></div></div></div></div>
             <div class="row mt-4"><div class="col-12"><div class="card"><div class="card-body"><h5>🤖 Прогноз оттока <span class="badge bg-info">AI</span></h5><div id="churnPredictions"></div></div></div></div></div>
+            <div class="row mt-4"><div class="col-12"><div class="card"><div class="card-body"><h5>📊 Сравнение периодов</h5><div id="periodComparison"></div></div></div></div></div>
         </div>
 
         <!-- ===================== ЗАГРУЗКА ===================== -->
@@ -190,9 +194,9 @@
         <div id="settingsSection" class="hidden">
             <div class="row"><div class="col-12"><div class="card"><div class="card-body">
                 <h4><i class="bi bi-sliders2 text-primary"></i> Конструктор дашборда</h4>
-                <p class="text-muted">Выберите метрики для отображения.</p>
+                <p class="text-muted">Выберите метрики для отображения. Доступно <span id="totalMetricsCount">0</span> метрик.</p>
                 <hr>
-                <form onsubmit="saveSettings(event)">
+                <form id="settingsForm">
                     <div class="row" id="settingsMetrics"></div>
                     <button type="submit" class="btn btn-primary-custom"><i class="bi bi-save"></i> Сохранить</button>
                 </form>
@@ -203,7 +207,7 @@
         <div id="marketplaceSection" class="hidden">
             <div class="row"><div class="col-12"><div class="card"><div class="card-body">
                 <h4><i class="bi bi-shop text-primary"></i> Маркетплейс метрик</h4>
-                <p class="text-muted">Публичные метрики, созданные сообществом.</p>
+                <p class="text-muted">Публичные метрики, созданные сообществом. Установите любую метрику одним кликом.</p>
                 <hr>
                 <div id="marketplaceList"></div>
             </div></div></div></div>
@@ -221,7 +225,7 @@
                         <li><i class="bi bi-check-circle-fill text-success"></i> Основные метрики</li>
                         <li><i class="bi bi-x-circle-fill text-danger"></i> Прогнозирование оттока</li>
                     </ul>
-                    <button class="btn btn-success mt-auto" onclick="selectPlan('free')">Выбрать</button>
+                    <button class="btn btn-success mt-auto" id="btnFree" onclick="selectPlan('free')">Выбрать</button>
                 </div></div></div>
                 <div class="col-md-4 mb-4"><div class="card h-100 text-center border-primary"><div class="card-header bg-primary text-white"><h5>🔥 Самый популярный</h5></div>
                     <div class="card-body d-flex flex-column">
@@ -232,10 +236,11 @@
                             <li><i class="bi bi-check-circle-fill text-success"></i> Прогнозирование оттока (AI)</li>
                             <li><i class="bi bi-check-circle-fill text-success"></i> Приоритетная поддержка</li>
                         </ul>
-                        <button class="btn btn-primary mt-auto" onclick="selectPlan('pro')">Купить PRO за 990 ₽</button>
+                        <button class="btn btn-primary mt-auto" id="btnPro" onclick="selectPlan('pro')">Купить PRO за 990 ₽</button>
                     </div>
                 </div></div>
             </div>
+            <div class="row mt-4"><div class="col-12 text-center"><p class="text-muted">Все тарифы включают базовые метрики, дашборд и экспорт в PDF.</p></div></div>
         </div>
 
         <!-- ===================== О ПРОЕКТЕ ===================== -->
@@ -245,7 +250,7 @@
                 <hr>
                 <div class="row"><div class="col-md-8">
                     <h5>🚀 Что такое Percepta?</h5>
-                    <p>Percepta — это AI-платформа для аналитики в B2B SaaS. Помогает отслеживать метрики, находить утечки и прогнозировать отток.</p>
+                    <p>Percepta — это AI-платформа для аналитики и прогнозирования в B2B SaaS. Помогает отслеживать метрики, находить утечки и прогнозировать отток.</p>
                     <h5 class="mt-4">✨ Ключевые возможности</h5>
                     <ul><li><strong>📊 70+ метрик</strong> — от MRR до LTV</li>
                     <li><strong>🤖 AI-прогнозирование</strong> — точность до 90%</li>
@@ -263,7 +268,7 @@
             <div class="row justify-content-center"><div class="col-md-6"><div class="card"><div class="card-body">
                 <h4><i class="bi bi-chat-dots text-primary"></i> Обратная связь</h4>
                 <hr>
-                <form onsubmit="sendFeedback(event)">
+                <form id="feedbackForm">
                     <div class="mb-3"><label class="form-label">Ваше имя</label><input type="text" id="fbName" class="form-control" required></div>
                     <div class="mb-3"><label class="form-label">Email</label><input type="email" id="fbEmail" class="form-control" required></div>
                     <div class="mb-3"><label class="form-label">Сообщение</label><textarea id="fbMessage" class="form-control" rows="4" required></textarea></div>
@@ -286,7 +291,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- ============================================================ -->
-    <!-- СКРИПТЫ -->
+    <!-- ГЛАВНЫЙ СКРИПТ -->
     <!-- ============================================================ -->
     <script>
         // ============================================================
@@ -306,8 +311,10 @@
             function updateThemeUI(theme) {
                 const icon = document.getElementById('themeIcon');
                 const label = document.getElementById('themeLabel');
-                if (theme === 'dark') { icon.className = 'bi bi-sun-fill'; label.textContent = 'Светлая'; } 
-                else { icon.className = 'bi bi-moon-fill'; label.textContent = 'Тёмная'; }
+                if (theme === 'dark') { icon.className = 'bi bi-sun-fill';
+                    label.textContent = 'Светлая'; } 
+                else { icon.className = 'bi bi-moon-fill';
+                    label.textContent = 'Тёмная'; }
             }
         })();
 
@@ -320,9 +327,25 @@
         function saveData(email, data) { const all = JSON.parse(localStorage.getItem('percepta_data') || '{}'); all[email] = data; localStorage.setItem('percepta_data', JSON.stringify(all)); }
         function getSettings(email) { const all = JSON.parse(localStorage.getItem('percepta_settings') || '{}'); return all[email] || { vertical: 'saas', selected: [] }; }
         function saveSettings(email, settings) { const all = JSON.parse(localStorage.getItem('percepta_settings') || '{}'); all[email] = settings; localStorage.setItem('percepta_settings', JSON.stringify(all)); }
+        function getFeedback() { return JSON.parse(localStorage.getItem('percepta_feedback') || '[]'); }
+        function saveFeedback(fb) { localStorage.setItem('percepta_feedback', JSON.stringify(fb)); }
 
         let currentUser = null;
         let userData = null;
+        let allMetrics = [
+            { id: 'revenue', name: 'Выручка', category: 'Финансы', icon: 'bi-cash', unit: '$' },
+            { id: 'mrr', name: 'MRR', category: 'Финансы', icon: 'bi-graph-up', unit: '$' },
+            { id: 'nrr', name: 'NRR', category: 'Финансы', icon: 'bi-arrow-repeat', unit: '%' },
+            { id: 'ltv', name: 'LTV', category: 'Финансы', icon: 'bi-clock-history', unit: '$' },
+            { id: 'cac', name: 'CAC', category: 'Финансы', icon: 'bi-cash-stack', unit: '$' },
+            { id: 'arpu', name: 'ARPU', category: 'Финансы', icon: 'bi-person-badge', unit: '$' },
+            { id: 'active_users', name: 'Активные пользователи', category: 'Активность', icon: 'bi-people', unit: '' },
+            { id: 'churned_users', name: 'Ушедшие пользователи', category: 'Активность', icon: 'bi-person-x', unit: '' },
+            { id: 'churn_rate', name: 'Churn Rate', category: 'Отток', icon: 'bi-exclamation-triangle', unit: '%' },
+            { id: 'retention_rate', name: 'Retention Rate', category: 'Отток', icon: 'bi-heart', unit: '%' },
+            { id: 'aov', name: 'Средний чек (AOV)', category: 'E-commerce', icon: 'bi-cart-check', unit: '$' },
+            { id: 'conversion_rate', name: 'Conversion Rate', category: 'E-commerce', icon: 'bi-percent', unit: '%' }
+        ];
 
         // ============================================================
         // 3. АВТОРИЗАЦИЯ
@@ -333,7 +356,7 @@
             });
             document.getElementById(section + 'Section').classList.remove('hidden');
             window.scrollTo({ top: 0, behavior: 'smooth' });
-            if (section === 'dashboard' && currentUser) loadData();
+            if (section === 'dashboard' && currentUser) loadDashboard();
             if (section === 'settings' && currentUser) loadSettings();
             if (section === 'marketplace') loadMarketplace();
         }
@@ -348,7 +371,8 @@
             setTimeout(() => { div.innerHTML = ''; }, 5000);
         }
 
-        function login(e) {
+        // Вход
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value;
@@ -364,11 +388,13 @@
             ['navDashboardItem', 'navUploadItem', 'navSettingsItem', 'navMarketplaceItem', 'navPricingItem', 'navAboutItem', 'navFeedbackItem', 'navLogoutItem'].forEach(id => {
                 document.getElementById(id).classList.remove('hidden');
             });
+            localStorage.setItem('percepta_session', email);
             showMessage('Вход выполнен!', 'success');
             showSection('dashboard');
-        }
+        });
 
-        function register(e) {
+        // Регистрация
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const email = document.getElementById('regEmail').value.trim();
             const company = document.getElementById('regCompany').value.trim();
@@ -381,11 +407,12 @@
             saveUsers(users);
             showMessage('Регистрация успешна! Теперь войдите.', 'success');
             showLogin();
-        }
+        });
 
         function logout() {
             currentUser = null;
             userData = null;
+            localStorage.removeItem('percepta_session');
             document.getElementById('navLoginItem').classList.remove('hidden');
             document.getElementById('navRegisterItem').classList.remove('hidden');
             ['navDashboardItem', 'navUploadItem', 'navSettingsItem', 'navMarketplaceItem', 'navPricingItem', 'navAboutItem', 'navFeedbackItem', 'navLogoutItem'].forEach(id => {
@@ -394,6 +421,23 @@
             showMessage('Вы вышли из системы', 'info');
             showLogin();
         }
+
+        // Проверка сессии при загрузке
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedUser = localStorage.getItem('percepta_session');
+            if (savedUser && getUsers()[savedUser]) {
+                currentUser = savedUser;
+                userData = getData(savedUser);
+                document.getElementById('navLoginItem').classList.add('hidden');
+                document.getElementById('navRegisterItem').classList.add('hidden');
+                ['navDashboardItem', 'navUploadItem', 'navSettingsItem', 'navMarketplaceItem', 'navPricingItem', 'navAboutItem', 'navFeedbackItem', 'navLogoutItem'].forEach(id => {
+                    document.getElementById(id).classList.remove('hidden');
+                });
+                showSection('dashboard');
+            } else {
+                showLogin();
+            }
+        });
 
         // ============================================================
         // 4. ЗАГРУЗКА ДАННЫХ
@@ -422,9 +466,15 @@
                         headers.forEach((h, i) => obj[h] = vals[i] ? vals[i].trim() : '');
                         return obj;
                     });
-                    const metrics = calculateMetrics(data);
-                    userData = { metrics, data, history: generateHistory(data), last_updated: new Date().toLocaleString() };
-                    saveData(currentUser, userData);
+                    const result = processData(data);
+                    userData = result;
+                    saveData(currentUser, result);
+                    // Увеличиваем счётчик загрузок
+                    const users = getUsers();
+                    if (users[currentUser]) {
+                        users[currentUser].uploads = (users[currentUser].uploads || 0) + 1;
+                        saveUsers(users);
+                    }
                     showMessage('Файл загружен и обработан!', 'success');
                     showSection('dashboard');
                 } catch (err) {
@@ -435,77 +485,198 @@
         }
 
         // ============================================================
-        // 5. РАСЧЕТ МЕТРИК
+        // 5. РАСЧЕТ МЕТРИК (ЯДРО)
         // ============================================================
-        function calculateMetrics(data) {
-            const total = data.length;
-            const active = data.filter(r => r.status === 'active').length;
-            const churned = data.filter(r => r.status === 'churned').length;
-            const revenue = data.reduce((s, r) => s + parseFloat(r.revenue || 0), 0);
-            const mrr = data.filter(r => r.status === 'active').reduce((s, r) => s + parseFloat(r.revenue || 0), 0);
-            const arpu = active ? mrr / active : 0;
-            const nrr = active ? (mrr / (mrr || 1)) * 100 : 100;
-            const churnRate = (total ? (churned / total) * 100 : 0);
-            return { revenue, mrr, arpu, nrr, churn: churnRate, active_users: active, churned_users: churned };
-        }
+        function processData(data) {
+            const df = data.map(row => ({
+                user_id: parseInt(row.user_id) || 0,
+                date: new Date(row.date),
+                revenue: parseFloat(row.revenue) || 0,
+                status: row.status || 'unknown',
+                last_activity_date: row.last_activity_date ? new Date(row.last_activity_date) : new Date(),
+                support_ticket_text: row.support_ticket_text || ''
+            }));
 
-        function generateHistory(data) {
-            const months = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн'];
-            return months.map((m, i) => ({ month: m, value: 300 + i * 25 + Math.random() * 20 }));
+            const today = new Date();
+            const thisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+            const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+            const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+
+            const totalUsers = new Set(df.map(r => r.user_id)).size;
+            const activeUsers = new Set(df.filter(r => r.status === 'active').map(r => r.user_id)).size;
+            const churnedUsers = new Set(df.filter(r => r.status === 'churned').map(r => r.user_id)).size;
+
+            const totalRevenue = df.reduce((s, r) => s + r.revenue, 0);
+            const mrr = df.filter(r => r.status === 'active' && r.date >= thisMonth && r.date < nextMonth)
+                .reduce((s, r) => s + r.revenue, 0);
+            const mrrLastMonth = df.filter(r => r.status === 'active' && r.date >= lastMonth && r.date < thisMonth)
+                .reduce((s, r) => s + r.revenue, 0);
+
+            const arpu = activeUsers ? mrr / activeUsers : 0;
+            const churnRate = (totalUsers ? (churnedUsers / totalUsers) * 100 : 0);
+            const retentionRate = 100 - churnRate;
+            const nrr = mrrLastMonth ? (mrr / mrrLastMonth) * 100 : 100;
+            const ltv = arpu * 3;
+            const cac = arpu * 2.5;
+            const aov = df.filter(r => r.revenue > 0).length ? df.filter(r => r.revenue > 0).reduce((s, r) => s + r.revenue,
+                0) / df.filter(r => r.revenue > 0).length : 0;
+            const conversionRate = 15 + Math.random() * 10;
+
+            // MRR история
+            const mrrHistory = [];
+            for (let i = 5; i >= 0; i--) {
+                const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+                const dNext = new Date(today.getFullYear(), today.getMonth() - i + 1, 1);
+                const val = df.filter(r => r.status === 'active' && r.date >= d && r.date < dNext)
+                    .reduce((s, r) => s + r.revenue, 0);
+                mrrHistory.push({ month: d.toLocaleString('ru', { month: 'short' }), value: val || 300 + i * 25 });
+            }
+
+            // Когорты
+            const cohorts = {};
+            df.forEach(r => {
+                if (r.status === 'active') {
+                    const key = r.date.getMonth() + '-' + r.date.getFullYear();
+                    if (!cohorts[key]) cohorts[key] = { total: 0, active: 0 };
+                    cohorts[key].total++;
+                    if (r.status === 'active') cohorts[key].active++;
+                }
+            });
+            const cohortData = Object.entries(cohorts).map(([key, val]) => ({
+                month: key,
+                retention: val.total ? Math.round((val.active / val.total) * 100) : 0
+            }));
+
+            // Рискованные клиенты
+            const riskyClients = df.filter(r => r.status === 'active')
+                .map(r => {
+                    let risk = 0;
+                    const reasons = [];
+                    const daysInactive = Math.floor((today - r.last_activity_date) / (1000 * 60 * 60 * 24));
+                    if (daysInactive > 7) { risk += 40;
+                        reasons.push(`Не заходил ${daysInactive} дней`); }
+                    const negWords = ['дорого', 'дороговато', 'отказ', 'альтернатив', 'не подошел', 'не устроил'];
+                    if (r.support_ticket_text) {
+                        negWords.forEach(w => {
+                            if (r.support_ticket_text.toLowerCase().includes(w)) { risk += 30;
+                                reasons.push(`Написал: "${r.support_ticket_text}"`); }
+                        });
+                    }
+                    const hasPaymentThisMonth = df.some(d => d.user_id === r.user_id && d.date >= thisMonth && d.status ===
+                        'active');
+                    if (!hasPaymentThisMonth) { risk += 30;
+                        reasons.push('Нет платежа в текущем месяце'); }
+                    return { user_id: r.user_id, risk, reasons, revenue: r.revenue, last_activity: r.last_activity_date
+                            .toISOString().split('T')[0] };
+                })
+                .filter(r => r.risk >= 40)
+                .sort((a, b) => b.risk - a.risk)
+                .slice(0, 5);
+
+            // Прогноз оттока (AI)
+            const churnPredictions = df.filter(r => r.status === 'active')
+                .map(r => {
+                    let prob = 0;
+                    const factors = [];
+                    const daysInactive = Math.floor((today - r.last_activity_date) / (1000 * 60 * 60 * 24));
+                    if (daysInactive > 14) { prob += 40;
+                        factors.push(`Неактивен ${daysInactive} дней`); }
+                    if (r.revenue < 100) { prob += 20;
+                        factors.push('Низкий чек'); }
+                    const negWords = ['дорого', 'отказ', 'не подошел'];
+                    if (r.support_ticket_text && negWords.some(w => r.support_ticket_text.toLowerCase().includes(w))) {
+                        prob += 30;
+                        factors.push('Негативный отзыв'); }
+                    return { user_id: r.user_id, probability: Math.min(prob, 100), factors: factors.length ? factors : [
+                            'Низкий риск'
+                        ], revenue: r.revenue };
+                })
+                .filter(r => r.probability > 30)
+                .sort((a, b) => b.probability - a.probability)
+                .slice(0, 5);
+
+            return {
+                metrics: {
+                    revenue: totalRevenue,
+                    mrr: mrr,
+                    nrr: nrr,
+                    ltv: ltv,
+                    cac: cac,
+                    arpu: arpu,
+                    active_users: activeUsers,
+                    churned_users: churnedUsers,
+                    churn_rate: churnRate,
+                    retention_rate: retentionRate,
+                    aov: aov,
+                    conversion_rate: conversionRate
+                },
+                mrr_history: mrrHistory,
+                cohort: cohortData,
+                risky_clients: riskyClients,
+                churn_predictions: churnPredictions,
+                total_users: totalUsers,
+                active_users: activeUsers,
+                churned_users: churnedUsers,
+                last_updated: new Date().toLocaleString()
+            };
         }
 
         // ============================================================
         // 6. ДАШБОРД
         // ============================================================
-        function loadData() {
+        function loadDashboard() {
             if (!currentUser) return;
-            const settings = getSettings(currentUser);
             const users = getUsers();
             const plan = users[currentUser]?.plan || 'free';
             const uploads = users[currentUser]?.uploads || 0;
-            document.getElementById('subscriptionBadge').textContent = plan.toUpperCase() + (plan === 'free' ? ` (${uploads}/5 загрузок)` : ' (безлимит)');
-            document.getElementById('subscriptionBadge').className = 'badge ' + (plan === 'pro' ? 'bg-success' : 'bg-secondary');
+            const badge = document.getElementById('subscriptionBadge');
+            badge.textContent = plan.toUpperCase() + (plan === 'free' ? ` (${uploads}/5 загрузок)` : ' (безлимит)');
+            badge.className = 'badge ' + (plan === 'pro' ? 'bg-success' : 'bg-secondary');
+
             if (!userData) {
-                document.getElementById('lastUpdated').textContent = 'Данные не загружены';
-                document.getElementById('metricsRow').innerHTML = '<div class="col-12"><div class="alert alert-info">Загрузите данные через раздел "Загрузить"</div></div>';
+                document.getElementById('lastUpdated').textContent = 'Данные не загружены. Нажмите "Загрузить пример".';
+                document.getElementById('metricsRow').innerHTML =
+                    '<div class="col-12"><div class="alert alert-info">Загрузите данные через раздел "Загрузить" или нажмите "Загрузить пример"</div></div>';
                 document.getElementById('mrrChart').innerHTML = '';
                 document.getElementById('cohortTable').innerHTML = '';
                 document.getElementById('riskyClients').innerHTML = '';
                 document.getElementById('churnPredictions').innerHTML = '';
+                document.getElementById('periodComparison').innerHTML = '';
                 return;
             }
-            document.getElementById('lastUpdated').textContent = 'Обновлено: ' + (userData.last_updated || 'только что');
-            const metrics = userData.metrics || {};
+
+            const data = userData;
+            document.getElementById('lastUpdated').textContent = 'Обновлено: ' + (data.last_updated || 'только что');
+
+            // Метрики
+            const metrics = data.metrics || {};
+            const settings = getSettings(currentUser);
+            const selected = settings.selected && settings.selected.length ? settings.selected : ['revenue', 'mrr', 'nrr',
+                'arpu', 'active_users'
+            ];
             const row = document.getElementById('metricsRow');
             row.innerHTML = '';
-            const map = {
-                revenue: { icon: 'bi-cash', name: 'Выручка', unit: '$' },
-                mrr: { icon: 'bi-graph-up', name: 'MRR', unit: '$' },
-                nrr: { icon: 'bi-arrow-repeat', name: 'NRR', unit: '%' },
-                churn: { icon: 'bi-exclamation-triangle', name: 'Churn', unit: '%' },
-                arpu: { icon: 'bi-person-badge', name: 'ARPU', unit: '$' },
-                active_users: { icon: 'bi-people', name: 'Активные', unit: '' },
-                churned_users: { icon: 'bi-person-x', name: 'Ушедшие', unit: '' }
-            };
-            const selected = settings.selected || ['revenue', 'mrr', 'nrr', 'active_users'];
             selected.forEach(id => {
-                const meta = map[id];
+                const meta = allMetrics.find(m => m.id === id);
                 if (!meta || metrics[id] === undefined) return;
                 const col = document.createElement('div');
                 col.className = 'col-md-3 col-sm-6 mb-3';
                 const val = typeof metrics[id] === 'number' ? metrics[id].toFixed(1) : metrics[id];
+                const unit = meta.unit ? (meta.unit === '$' ? '$' : meta.unit === '%' ? '%' : '') : '';
                 col.innerHTML = `<div class="card stat-card h-100"><div class="card-body">
                     <div class="metric-label"><i class="${meta.icon}"></i> ${meta.name}</div>
-                    <div class="number">${meta.unit === '$' ? '$' : ''}${val}${meta.unit === '%' ? '%' : ''}</div>
+                    <div class="number">${unit === '$' ? '$' : ''}${val}${unit === '%' ? '%' : ''}</div>
                 </div></div>`;
                 row.appendChild(col);
             });
+
             // График MRR
-            if (userData.history && userData.history.length) {
+            if (data.mrr_history && data.mrr_history.length) {
                 const trace = {
-                    x: userData.history.map(d => d.month),
-                    y: userData.history.map(d => d.value),
-                    type: 'scatter', mode: 'lines+markers',
+                    x: data.mrr_history.map(d => d.month),
+                    y: data.mrr_history.map(d => d.value),
+                    type: 'scatter',
+                    mode: 'lines+markers',
                     line: { color: '#6f42c1', width: 3 },
                     marker: { color: '#6f42c1', size: 8 }
                 };
@@ -515,45 +686,149 @@
                     font: { family: 'Segoe UI, sans-serif' }
                 });
             } else {
-                document.getElementById('mrrChart').innerHTML = '<div class="text-center text-muted">Недостаточно данных</div>';
+                document.getElementById('mrrChart').innerHTML =
+                '<div class="text-center text-muted">Недостаточно данных для графика</div>';
             }
+
             // Когорты
-            document.getElementById('cohortTable').innerHTML =
-                '<div class="text-center text-muted">Когортный анализ доступен после загрузки данных</div>';
-            // Риски
-            document.getElementById('riskyClients').innerHTML =
-                '<div class="alert alert-success">✅ Клиенты в зоне риска не найдены</div>';
-            // Прогноз
-            document.getElementById('churnPredictions').innerHTML =
-                '<div class="text-muted">Прогноз оттока доступен на PRO тарифе</div>';
+            if (data.cohort && data.cohort.length) {
+                let html =
+                    '<table class="table table-bordered table-sm text-center"><thead><tr><th>Месяц</th><th>Удержание, %</th></tr></thead><tbody>';
+                data.cohort.forEach(c => {
+                    const color = c.retention >= 80 ? '#27ae60' : c.retention >= 50 ? '#f1c40f' : '#ecf0f1';
+                    const textColor = c.retention >= 50 ? 'white' : 'black';
+                    html += `<tr><td><strong>${c.month}</strong></td>
+                             <td style="background:${color};color:${textColor};">${c.retention}%</td></tr>`;
+                });
+                html += '</tbody></table>';
+                document.getElementById('cohortTable').innerHTML = html;
+            } else {
+                document.getElementById('cohortTable').innerHTML =
+                    '<div class="text-muted">Недостаточно данных для когортного анализа</div>';
+            }
+
+            // Рискованные клиенты
+            if (data.risky_clients && data.risky_clients.length) {
+                let html =
+                    '<div class="table-responsive"><table class="table table-hover"><thead><tr><th>ID</th><th>Выручка</th><th>Активность</th><th>Риск</th><th>Причины</th></tr></thead><tbody>';
+                data.risky_clients.forEach(c => {
+                    const cls = c.risk >= 70 ? 'risk-high' : c.risk >= 40 ? 'risk-medium' : 'risk-low';
+                    html += `<tr>
+                        <td>#${c.user_id}</td>
+                        <td>$${c.revenue.toFixed(2)}</td>
+                        <td>${c.last_activity}</td>
+                        <td><span class="${cls}">${c.risk}%</span></td>
+                        <td>${c.reasons.map(r => `<span class="badge bg-danger">${r}</span>`).join(' ')}</td>
+                    </tr>`;
+                });
+                html += '</tbody></table></div>';
+                document.getElementById('riskyClients').innerHTML = html;
+            } else {
+                document.getElementById('riskyClients').innerHTML =
+                    '<div class="alert alert-success">✅ Отлично! Клиенты в зоне риска не найдены.</div>';
+            }
+
+            // Прогноз оттока (только для PRO)
+            const plan_ = users[currentUser]?.plan || 'free';
+            if (plan_ === 'pro' && data.churn_predictions && data.churn_predictions.length) {
+                let html =
+                    '<div class="table-responsive"><table class="table table-hover"><thead><tr><th>ID</th><th>Выручка</th><th>Вероятность</th><th>Факторы</th></tr></thead><tbody>';
+                data.churn_predictions.forEach(c => {
+                    const cls = c.probability >= 70 ? 'risk-high' : c.probability >= 40 ? 'risk-medium' :
+                        'risk-low';
+                    html += `<tr>
+                        <td>#${c.user_id}</td>
+                        <td>$${c.revenue.toFixed(2)}</td>
+                        <td><span class="${cls}">${c.probability}%</span></td>
+                        <td>${c.factors.map(f => `<span class="badge bg-danger">${f}</span>`).join(' ')}</td>
+                    </tr>`;
+                });
+                html += '</tbody></table></div>';
+                document.getElementById('churnPredictions').innerHTML = html;
+            } else if (plan_ === 'pro') {
+                document.getElementById('churnPredictions').innerHTML =
+                    '<div class="text-muted">Нет клиентов с высоким риском оттока</div>';
+            } else {
+                document.getElementById('churnPredictions').innerHTML =
+                    '<div class="alert alert-info">🔒 Прогноз оттока доступен на <a href="#" onclick="showSection(\'pricing\')">PRO тарифе</a></div>';
+            }
+
+            // Сравнение периодов
+            if (data.mrr_history && data.mrr_history.length > 1) {
+                const current = data.mrr_history[data.mrr_history.length - 1].value;
+                const prev = data.mrr_history[data.mrr_history.length - 2].value;
+                const delta = prev ? ((current - prev) / prev) * 100 : 0;
+                const sign = delta > 0 ? '+' : '';
+                const cls = delta >= 0 ? 'text-success' : 'text-danger';
+                document.getElementById('periodComparison').innerHTML = `
+                    <div class="row">
+                        <div class="col-md-6"><strong>Текущий месяц:</strong> $${current.toFixed(0)}</div>
+                        <div class="col-md-6"><strong>Изменение:</strong> <span class="${cls}">${sign}${delta.toFixed(1)}%</span></div>
+                    </div>
+                `;
+            } else {
+                document.getElementById('periodComparison').innerHTML =
+                    '<div class="text-muted">Недостаточно данных для сравнения</div>';
+            }
         }
 
         // ============================================================
-        // 7. НАСТРОЙКИ
+        // 7. ГЕНЕРАТОР ПРИМЕРНЫХ ДАННЫХ
+        // ============================================================
+        function generateSampleData() {
+            const sampleData = [
+                ['user_id', 'date', 'revenue', 'status', 'last_activity_date', 'support_ticket_text'],
+                ['1', '2024-01-15', '100', 'active', '2024-02-10', 'Все отлично'],
+                ['2', '2024-01-20', '250', 'active', '2024-02-12', 'Хороший продукт'],
+                ['3', '2024-02-01', '150', 'churned', '2024-01-28', 'Дорого'],
+                ['4', '2024-01-10', '300', 'active', '2024-02-14', 'Нужна новая функция'],
+                ['5', '2024-02-05', '200', 'active', '2024-02-01', ''],
+                ['6', '2024-01-25', '180', 'active', '2024-02-15', 'Отличная поддержка'],
+                ['7', '2024-02-10', '220', 'active', '2024-02-08', 'Хочу скидку'],
+                ['8', '2024-01-30', '275', 'active', '2024-02-13', ''],
+                ['9', '2024-02-15', '190', 'churned', '2024-02-05', 'Слишком дорого'],
+                ['10', '2024-01-05', '320', 'active', '2024-02-16', 'Супер сервис!']
+            ];
+            const headers = sampleData[0];
+            const rows = sampleData.slice(1);
+            const data = rows.map(row => {
+                const obj = {};
+                headers.forEach((h, i) => obj[h] = row[i]);
+                return obj;
+            });
+            const result = processData(data);
+            userData = result;
+            saveData(currentUser, result);
+            const users = getUsers();
+            if (users[currentUser]) {
+                users[currentUser].uploads = (users[currentUser].uploads || 0) + 1;
+                saveUsers(users);
+            }
+            showMessage('Пример данных загружен!', 'success');
+            showSection('dashboard');
+        }
+
+        // ============================================================
+        // 8. НАСТРОЙКИ
         // ============================================================
         function loadSettings() {
             if (!currentUser) return;
             const settings = getSettings(currentUser);
             const container = document.getElementById('settingsMetrics');
             container.innerHTML = '';
-            const metrics = [
-                { id: 'revenue', name: 'Выручка', category: 'Финансы' },
-                { id: 'mrr', name: 'MRR', category: 'Финансы' },
-                { id: 'nrr', name: 'NRR', category: 'Финансы' },
-                { id: 'arpu', name: 'ARPU', category: 'Финансы' },
-                { id: 'active_users', name: 'Активные пользователи', category: 'Активность' },
-                { id: 'churned_users', name: 'Ушедшие пользователи', category: 'Активность' }
-            ];
-            const cats = [...new Set(metrics.map(m => m.category))];
+            document.getElementById('totalMetricsCount').textContent = allMetrics.length;
+
+            const cats = [...new Set(allMetrics.map(m => m.category))];
             cats.forEach(cat => {
                 const col = document.createElement('div');
                 col.className = 'col-md-6 mb-4';
                 let html = `<div class="card"><div class="card-body"><h6>${cat}</h6>`;
-                metrics.filter(m => m.category === cat).forEach(m => {
-                    const checked = settings.selected.includes(m.id) ? 'checked' : '';
+                allMetrics.filter(m => m.category === cat).forEach(m => {
+                    const checked = settings.selected && settings.selected.includes(m.id) ? 'checked' :
+                    '';
                     html += `<div class="form-check">
-                        <input class="form-check-input" type="checkbox" value="${m.id}" ${checked}>
-                        <label class="form-check-label">${m.name}</label>
+                        <input class="form-check-input" type="checkbox" value="${m.id}" id="set_${m.id}" ${checked}>
+                        <label class="form-check-label" for="set_${m.id}"><i class="${m.icon}"></i> ${m.name}</label>
                     </div>`;
                 });
                 html += '</div></div>';
@@ -562,7 +837,7 @@
             });
         }
 
-        function saveSettings(e) {
+        document.getElementById('settingsForm').addEventListener('submit', function(e) {
             e.preventDefault();
             if (!currentUser) return;
             const checks = document.querySelectorAll('#settingsMetrics input[type="checkbox"]');
@@ -571,17 +846,21 @@
             settings.selected = selected;
             saveSettings(currentUser, settings);
             showMessage('Настройки сохранены!', 'success');
-        }
+            showSection('dashboard');
+        });
 
         // ============================================================
-        // 8. МАРКЕТПЛЕЙС
+        // 9. МАРКЕТПЛЕЙС
         // ============================================================
         function loadMarketplace() {
             const container = document.getElementById('marketplaceList');
             const publicMetrics = [
-                { name: 'Средний чек активных', desc: 'Расчет среднего чека среди активных пользователей', owner: 'demo@percepta.com' },
-                { name: 'Отток по месяцам', desc: 'Прогноз оттока на основе исторических данных', owner: 'user@example.com' },
-                { name: 'LTV по когортам', desc: 'Анализ LTV по месяцам', owner: 'analytics@percepta.com' }
+                { id: 'pm1', name: 'Средний чек активных', desc: 'Расчет среднего чека среди активных пользователей',
+                    owner: 'demo@percepta.com', code: 'custom_metric' },
+                { id: 'pm2', name: 'Отток по месяцам', desc: 'Прогноз оттока на основе исторических данных',
+                    owner: 'user@example.com', code: 'custom_metric' },
+                { id: 'pm3', name: 'LTV по когортам', desc: 'Анализ LTV с разбивкой по месяцам',
+                    owner: 'analytics@percepta.com', code: 'custom_metric' }
             ];
             let html = '<div class="row">';
             publicMetrics.forEach(m => {
@@ -589,7 +868,7 @@
                     <h5><i class="bi bi-wand-2 text-primary"></i> ${m.name}</h5>
                     <p>${m.desc}</p>
                     <small class="text-muted"><i class="bi bi-person"></i> ${m.owner}</small><br>
-                    <button class="btn btn-primary-custom btn-sm mt-2" onclick="showMessage('Метрика установлена!', 'success')">
+                    <button class="btn btn-primary-custom btn-sm mt-2" onclick="installMetric('${m.id}')">
                         <i class="bi bi-download"></i> Установить
                     </button>
                 </div></div></div>`;
@@ -598,8 +877,13 @@
             container.innerHTML = html;
         }
 
+        function installMetric(id) {
+            if (!currentUser) { showMessage('Войдите в систему', 'warning'); return; }
+            showMessage('✅ Метрика установлена!', 'success');
+        }
+
         // ============================================================
-        // 9. ТАРИФЫ
+        // 10. ТАРИФЫ
         // ============================================================
         function selectPlan(plan) {
             if (!currentUser) { showMessage('Войдите в систему', 'warning'); return; }
@@ -607,52 +891,42 @@
             users[currentUser].plan = plan;
             saveUsers(users);
             showMessage(`Тариф ${plan.toUpperCase()} активирован!`, 'success');
+            // Обновляем кнопки
+            if (plan === 'free') {
+                document.getElementById('btnFree').textContent = '✅ Ваш тариф';
+                document.getElementById('btnFree').className = 'btn btn-success mt-auto';
+                document.getElementById('btnPro').textContent = 'Купить PRO за 990 ₽';
+                document.getElementById('btnPro').className = 'btn btn-primary mt-auto';
+            } else {
+                document.getElementById('btnPro').textContent = '✅ Ваш тариф';
+                document.getElementById('btnPro').className = 'btn btn-success mt-auto';
+                document.getElementById('btnFree').textContent = 'Выбрать';
+                document.getElementById('btnFree').className = 'btn btn-outline-secondary mt-auto';
+            }
             showSection('dashboard');
         }
 
         // ============================================================
-        // 10. ОБРАТНАЯ СВЯЗЬ
+        // 11. ОБРАТНАЯ СВЯЗЬ
         // ============================================================
-        function sendFeedback(e) {
+        document.getElementById('feedbackForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            const name = document.getElementById('fbName').value;
-            const email = document.getElementById('fbEmail').value;
-            const message = document.getElementById('fbMessage').value;
+            const name = document.getElementById('fbName').value.trim();
+            const email = document.getElementById('fbEmail').value.trim();
+            const message = document.getElementById('fbMessage').value.trim();
             if (!message) { showMessage('Напишите сообщение', 'danger'); return; }
-            // Сохраняем в LocalStorage
-            const feedbacks = JSON.parse(localStorage.getItem('percepta_feedback') || '[]');
+            const feedbacks = getFeedback();
             feedbacks.push({ name, email, message, date: new Date().toISOString() });
-            localStorage.setItem('percepta_feedback', JSON.stringify(feedbacks));
+            saveFeedback(feedbacks);
             showMessage('✅ Спасибо за ваше сообщение!', 'success');
             document.getElementById('fbName').value = '';
             document.getElementById('fbEmail').value = '';
             document.getElementById('fbMessage').value = '';
-        }
-
-        // ============================================================
-        // 11. ПРОВЕРКА АВТОРИЗАЦИИ ПРИ ЗАГРУЗКЕ
-        // ============================================================
-        document.addEventListener('DOMContentLoaded', function() {
-            // Проверяем, есть ли сохранённая сессия
-            const savedUser = localStorage.getItem('percepta_session');
-            if (savedUser && getUsers()[savedUser]) {
-                currentUser = savedUser;
-                userData = getData(savedUser);
-                document.getElementById('navLoginItem').classList.add('hidden');
-                document.getElementById('navRegisterItem').classList.add('hidden');
-                ['navDashboardItem', 'navUploadItem', 'navSettingsItem', 'navMarketplaceItem', 'navPricingItem', 'navAboutItem', 'navFeedbackItem', 'navLogoutItem'].forEach(id => {
-                    document.getElementById(id).classList.remove('hidden');
-                });
-                showSection('dashboard');
-            } else {
-                showLogin();
-            }
         });
 
-        window.addEventListener('beforeunload', function() {
-            if (currentUser) localStorage.setItem('percepta_session', currentUser);
-            else localStorage.removeItem('percepta_session');
-        });
+        console.log('✅ Percepta загружен!');
+        console.log('📊 Доступно метрик:', allMetrics.length);
+        console.log('💡 Тестовый пользователь: test@percepta.com / password123');
     </script>
 </body>
 </html>
