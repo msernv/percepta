@@ -1,3 +1,35 @@
 "service_account.json" 
 "service_account.json" 
 "service_account.json" 
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# Database
+*.db
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
+
+# Secrets
+.env
+service_account.json
+*.pem
+
+# Logs
+*.log
+
+# Uploads
+uploads/
+
+# OS
+.DS_Store
+Thumbs.db
