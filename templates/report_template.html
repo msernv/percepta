@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Отчет Percepta</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; padding: 40px; color: #333; }
+        h1 { color: #6f42c1; border-bottom: 2px solid #6f42c1; padding-bottom: 10px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .company { font-size: 14px; color: #777; }
+        .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin: 20px 0; }
+        .metric-card { background: #f8f9fa; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid #e9ecef; }
+        .metric-value { font-size: 24px; font-weight: 700; color: #1a1a2e; }
+        .metric-name { font-size: 12px; color: #6c757d; text-transform: uppercase; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
+        th { background: #6f42c1; color: white; }
+        .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #999; border-top: 1px solid #eee; padding-top: 20px; }
+        .risk-high { color: #dc3545; }
+        .risk-medium { color: #fd7e14; }
+        .risk-low { color: #28a745; }
+        .chart-container { margin: 20px 0; text-align: center; }
+        .chart-container img { max-width: 100%; height: auto; }
+        .badge { background: #6f42c1; color: white; padding: 2px 10px; border-radius: 12px; font-size: 10px; }
+        .section-title { margin-top: 30px; font-size: 18px; font-weight: 600; color: #1a1a2e; border-left: 4px solid #6f42c1; padding-left: 10px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 Percepta — Отчет по метрикам</h1>
+        <div class="company">{{ company_name }}</div>
+        <div class="company">Дата: {{ date }}</div>
+    </div>
+
+    <h2 class="section-title">📈 Ключевые метрики</h2>
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <div class="metric-value">${{ metrics.revenue|round(0) }}</div>
+            <div class="metric-name">Выручка</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">${{ metrics.mrr|round(0) }}</div>
+            <div class="metric-name">MRR</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">{{ metrics.nrr|round(1) }}%</div>
+            <div class="metric-name">NRR</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">{{ metrics.customer_churn_rate|round(1) }}%</div>
+            <div class="metric-name">Churn</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">${{ metrics.arpu|round(1) }}</div>
+            <div class="metric-name">ARPU</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">{{ metrics.active_users }}</div>
+            <div class="metric-name">Активные</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">{{ metrics.churned_users }}</div>
+            <div class="metric-name">Ушедшие</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">{{ metrics.ltv|round(0) }}$</div>
+            <div class="metric-name">LTV</div>
+        </div>
+    </div>
+
+    <h2 class="section-title">📈 Динамика MRR</h2>
+    <div class="chart-container">
+        <img src="{{ chart_image }}" alt="График MRR">
+    </div>
+
+    <h2 class="section-title">🔥 Когортное удержание</h2>
+    <table>
+        <thead>
+            <tr><th>Месяц</th><th>Удержание, %</th></tr>
+        </thead>
+        <tbody>
+            {% for c in cohort %}
+            <tr>
+                <td><strong>{{ c.month }}</strong></td>
+                <td>{{ c.retention }}%</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2 class="section-title">⚠️ Клиенты в зоне риска</h2>
+    {% if risky_clients %}
+    <table>
+        <thead>
+            <tr><th>ID</th><th>Выручка</th><th>Риск</th><th>Причины</th></tr>
+        </thead>
+        <tbody>
+            {% for client in risky_clients %}
+            <tr>
+                <td>#{{ client.user_id }}</td>
+                <td>${{ client.revenue|round(2) }}</td>
+                <td>
+                    <span class="risk-{{ 'high' if client.risk >= 70 else 'medium' if client.risk >= 40 else 'low' }}">
+                        {{ client.risk }}%
+                    </span>
+                </td>
+                <td>{{ client.reasons|join(', ') }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="color: #28a745;">✅ Отлично! Клиенты в зоне риска не найдены.</p>
+    {% endif %}
+
+    <div class="footer">
+        <p>Сгенерировано в Percepta — AI-аналитика для вашего бизнеса</p>
+        <p>{{ date }}</p>
+    </div>
+</body>
+</html>

@@ -1,7 +1,7 @@
 from flask_login import UserMixin
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
-from init_app import db
+from database import db
 
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
@@ -14,6 +14,11 @@ class User(UserMixin, db.Model):
     selected_metrics = db.Column(db.JSON, default=list)
     custom_metrics = db.Column(db.JSON, default=list)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Поля для подписок
+    subscription_plan = db.Column(db.String(20), default='free')  # 'free' или 'pro'
+    upload_count = db.Column(db.Integer, default=0)  # Счётчик загрузок в текущем месяце
+    monthly_reset_date = db.Column(db.DateTime, default=datetime.utcnow)  # Дата сброса счётчика
     
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)

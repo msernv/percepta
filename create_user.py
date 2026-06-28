@@ -1,4 +1,5 @@
-from init_app import app, db
+from app import app
+from database import db
 from models import User
 
 print("🔄 Проверка пользователей...")

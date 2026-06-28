@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title mb-3">
+                    <i class="bi bi-chat-dots text-primary"></i> Обратная связь
+                </h4>
+                <p class="text-muted">
+                    Расскажите нам о своём опыте использования Percepta.
+                    Мы ценим ваше мнение!
+                </p>
+                <hr>
+                <form method="POST" action="{{ url_for('feedback') }}">
+                    <div class="mb-3">
+                        <label class="form-label">Ваше имя</label>
+                        <input type="text" name="name" class="form-control" 
+                               value="{{ current_user.company_name or current_user.email }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control" 
+                               value="{{ current_user.email }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Тема</label>
+                        <select name="subject" class="form-select">
+                            <option value="general">Общий вопрос</option>
+                            <option value="bug">Сообщить об ошибке</option>
+                            <option value="feature">Предложить функцию</option>
+                            <option value="partnership">Сотрудничество</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Сообщение</label>
+                        <textarea name="message" class="form-control" rows="5" 
+                                  placeholder="Опишите ваш вопрос или предложение..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary-custom w-100">
+                        <i class="bi bi-send"></i> Отправить
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

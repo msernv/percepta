@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 text-center mb-4">
+        <h2 class="display-6 fw-bold">Выберите тариф</h2>
+        <p class="text-muted">Развивайте свой бизнес вместе с Percepta</p>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <!-- ============================================================ -->
+    <!-- БЕСПЛАТНЫЙ ТАРИФ -->
+    <!-- ============================================================ -->
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 text-center">
+            <div class="card-body d-flex flex-column">
+                <h3 class="card-title">🚀 Бесплатный</h3>
+                <p class="card-text text-muted">Для старта</p>
+                <div class="my-3">
+                    <span class="display-4 fw-bold">0 ₽</span>
+                    <span class="text-muted">/мес</span>
+                </div>
+                <ul class="list-unstyled text-start">
+                    <li><i class="bi bi-check-circle-fill text-success"></i> 5 загрузок в месяц</li>
+                    <li><i class="bi bi-check-circle-fill text-success"></i> Все основные метрики</li>
+                    <li><i class="bi bi-check-circle-fill text-success"></i> Дашборд с графиками</li>
+                    <li><i class="bi bi-check-circle-fill text-success"></i> Экспорт в PDF</li>
+                    <li><i class="bi bi-x-circle-fill text-danger"></i> Прогнозирование оттока</li>
+                    <li><i class="bi bi-x-circle-fill text-danger"></i> Приоритетная поддержка</li>
+                </ul>
+                {% if current_user.is_authenticated and current_user.subscription_plan == 'free' %}
+                    <span class="btn btn-success mt-auto">Ваш тариф</span>
+                {% else %}
+                    <a href="{{ url_for('upgrade_to_pro') }}" class="btn btn-outline-primary mt-auto">Выбрать</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- PRO ТАРИФ (С КНОПКОЙ ОПЛАТЫ) -->
+    <!-- ============================================================ -->
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 text-center border-primary">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">🔥 Самый популярный</h5>
+            </div>
+            <div class="card-body d-flex flex-column">
+                <h3 class="card-title">💎 PRO</h3>
+                <p class="card-text text-muted">Для профессионалов</p>
+                <div class="my-3">
+                    <span class="display-4 fw-bold">990 ₽</span>
+                    <span class="text-muted">/мес</span>
+                </div>
+                <ul class="list-unstyled text-start">
+                    <li><i class="bi bi-check-circle-fill text-success"></i> Безлимитные загрузки</li>
+                    <li><i class="bi bi-check-circle-fill text-success"></i> Прогнозирование оттока (AI)</li>
+                    <li><i class="bi bi-check-circle-fill text-success"></i> Все продвинутые метрики</li>
+                    <li><i class="bi bi-check-circle-fill text-success"></i> Экспорт в PDF с полным отчетом</li>
+                    <li><i class="bi bi-check-circle-fill text-success"></i> Приоритетная поддержка</li>
+                    <li><i class="bi bi-check-circle-fill text-success"></i> Интеграция с Google Sheets</li>
+                </ul>
+                {% if current_user.is_authenticated and current_user.subscription_plan == 'pro' %}
+                    <span class="btn btn-success mt-auto">Ваш тариф</span>
+                {% else %}
+                    <!-- ЭТО НОВАЯ КНОПКА ОПЛАТЫ -->
+                    <a href="{{ url_for('create_payment_route') }}" class="btn btn-primary mt-auto">
+                        Купить PRO за 990 ₽
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- ДОПОЛНИТЕЛЬНАЯ ИНФОРМАЦИЯ -->
+<!-- ============================================================ -->
+<div class="row mt-4">
+    <div class="col-12 text-center">
+        <p class="text-muted">Все тарифы включают базовые метрики, дашборд и экспорт в PDF.</p>
+        <p class="text-muted">Подписку можно отменить в любой момент.</p>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- BUY ME A COFFEE -->
+<!-- ============================================================ -->
+<div class="row mt-5">
+    <div class="col-12 text-center">
+        <p class="text-muted">Нравится Percepta?</p>
+        <a href="https://boosty.to/percepta" target="_blank" class="btn btn-warning">
+            <i class="bi bi-cup-hot"></i> Купить мне кофе ☕
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -5,8 +5,12 @@
     <div class="col-lg-8">
         <div class="card">
             <div class="card-body">
-                <h4 class="card-title mb-3"><i class="bi bi-wand-2 text-primary"></i> Создать свою метрику через ИИ</h4>
-                <p class="text-muted">Опишите словами, какую метрику вы хотите увидеть, и наш ИИ создаст её для вас.</p>
+                <h4 class="card-title mb-3">
+                    <i class="bi bi-wand-2 text-primary"></i> Создать свою метрику через ИИ
+                </h4>
+                <p class="text-muted">
+                    Опишите словами, какую метрику вы хотите увидеть, и наш ИИ создаст её для вас.
+                </p>
                 <hr>
                 <form method="POST" action="{{ url_for('create_metric') }}">
                     <div class="mb-3">
@@ -19,9 +23,20 @@
                         <input type="text" name="custom_name" class="form-control" placeholder="Например: Средний чек активных">
                         <small class="text-muted">Если не заполнить — ИИ придумает название сам</small>
                     </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" name="is_public" id="isPublic" value="true">
+                        <label class="form-check-label" for="isPublic">
+                            <i class="bi bi-globe"></i> Опубликовать в маркетплейсе
+                        </label>
+                        <small class="text-muted d-block">Другие пользователи смогут использовать эту метрику</small>
+                    </div>
                     <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary-custom"><i class="bi bi-magic"></i> Создать метрику</button>
-                        <a href="{{ url_for('settings') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Назад</a>
+                        <button type="submit" class="btn btn-primary-custom">
+                            <i class="bi bi-magic"></i> Создать метрику
+                        </button>
+                        <a href="{{ url_for('settings') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Назад
+                        </a>
                     </div>
                 </form>
                 <div class="mt-4">
@@ -41,7 +56,15 @@
                 <h5 class="card-title"><i class="bi bi-list-check"></i> Мои созданные метрики</h5>
                 <div class="table-responsive">
                     <table class="table table-hover">
-                        <thead><tr><th>Название</th><th>Описание</th><th>Дата</th><th>Действия</th></tr></thead>
+                        <thead>
+                            <tr>
+                                <th>Название</th>
+                                <th>Описание</th>
+                                <th>Дата</th>
+                                <th>Статус</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
                         <tbody>
                             {% for metric in custom_metrics %}
                             <tr>
@@ -49,8 +72,17 @@
                                 <td>{{ metric.description or '—' }}</td>
                                 <td>{{ metric.created_at[:10] }}</td>
                                 <td>
+                                    {% if metric.is_public %}
+                                        <span class="badge bg-success">Публичная</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Приватная</span>
+                                    {% endif %}
+                                </td>
+                                <td>
                                     <form method="POST" action="{{ url_for('delete_metric', metric_id=metric.id) }}" style="display: inline;">
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Удалить метрику?')"><i class="bi bi-trash"></i></button>
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Удалить метрику?')">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
                                     </form>
                                 </td>
                             </tr>

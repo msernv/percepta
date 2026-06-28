@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title mb-3">
+                    <i class="bi bi-shop text-primary"></i> Маркетплейс метрик
+                </h4>
+                <p class="text-muted">
+                    Публичные метрики, созданные сообществом Percepta. 
+                    Установите любую метрику одним кликом.
+                </p>
+                <hr>
+
+                {% if public_metrics %}
+                <div class="row">
+                    {% for metric in public_metrics %}
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h5 class="card-title">
+                                            <i class="bi bi-wand-2 text-primary"></i>
+                                            {{ metric.name }}
+                                            <span class="badge bg-success ms-2">Публичная</span>
+                                        </h5>
+                                        <p class="card-text">{{ metric.description or 'Без описания' }}</p>
+                                        <small class="text-muted">
+                                            <i class="bi bi-person"></i> {{ metric.user.email }}
+                                            <br>
+                                            <i class="bi bi-calendar3"></i> {{ metric.created_at.strftime('%d.%m.%Y') }}
+                                        </small>
+                                    </div>
+                                    <div>
+                                        {% if metric.id|string in installed_ids %}
+                                            <span class="badge bg-secondary">
+                                                <i class="bi bi-check-circle"></i> Установлена
+                                            </span>
+                                        {% else %}
+                                            <form method="POST" action="{{ url_for('install_metric', metric_id=metric.id) }}">
+                                                <button type="submit" class="btn btn-primary-custom btn-sm">
+                                                    <i class="bi bi-download"></i> Установить
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="mt-2">
+                                    <details>
+                                        <summary class="text-muted" style="cursor: pointer;">
+                                            <i class="bi bi-code-square"></i> Показать код
+                                        </summary>
+                                        <pre class="bg-light p-2 rounded mt-2" style="font-size: 0.8rem; overflow-x: auto;">{{ metric.code }}</pre>
+                                    </details>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> 
+                    В маркетплейсе пока нет публичных метрик. 
+                    <a href="{{ url_for('create_metric') }}">Создайте свою метрику</a> и опубликуйте её!
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

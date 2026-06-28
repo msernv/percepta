@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title mb-3">
+                    <i class="bi bi-info-circle text-primary"></i> О проекте Percepta
+                </h4>
+                <hr>
+                <div class="row">
+                    <div class="col-md-8">
+                        <h5>🚀 Что такое Percepta?</h5>
+                        <p>
+                            Percepta — это AI-платформа для аналитики и прогнозирования в B2B SaaS.
+                            Мы помогаем компаниям отслеживать ключевые метрики, находить утечки в доходах
+                            и прогнозировать отток клиентов.
+                        </p>
+                        
+                        <h5 class="mt-4">✨ Ключевые возможности</h5>
+                        <ul>
+                            <li><strong>📊 70+ метрик</strong> — от MRR и NRR до LTV и CAC</li>
+                            <li><strong>🤖 AI-прогнозирование</strong> — предсказываем отток с точностью до 90%</li>
+                            <li><strong>📱 PWA-приложение</strong> — работайте с телефона и планшетов</li>
+                            <li><strong>🔗 Интеграции</strong> — Google Sheets, CRM, API</li>
+                            <li><strong>🛒 Маркетплейс метрик</strong> — делитесь и устанавливайте метрики</li>
+                        </ul>
+                        
+                        <h5 class="mt-4">👨‍💻 Технологии</h5>
+                        <p>
+                            Python, Flask, PostgreSQL, Pandas, Plotly, ReportLab, PWA.
+                        </p>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6>📬 Контакты</h6>
+                                <p>
+                                    <i class="bi bi-envelope"></i> support@percepta.com<br>
+                                    <i class="bi bi-telegram"></i> @percepta_bot<br>
+                                    <i class="bi bi-github"></i> github.com/msernv/percepta
+                                </p>
+                                <hr>
+                                <h6>💡 Хотите внести вклад?</h6>
+                                <p>
+                                    Percepta — открытый проект. Мы рады контрибьюторам!
+                                </p>
+                                <a href="{{ url_for('feedback') }}" class="btn btn-primary-custom w-100">
+                                    <i class="bi bi-chat-dots"></i> Оставить отзыв
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
